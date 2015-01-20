@@ -1,0 +1,4 @@
+C:\Users\Nicholas\AndroidWorkspace\InstaJet\app\build\intermediates\classes\debug
+C:\Users\Nicholas\AndroidWorkspace\InstaJet\app\build\intermediates\pre-dexed\debug\support-annotations-21.0.3-5bc8165478412846833a256794931e4302bd1a2b.jar
+C:\Users\Nicholas\AndroidWorkspace\InstaJet\app\build\intermediates\pre-dexed\debug\internal_impl-21.0.3-b1aa14e5557569ba56081e821e1b3250caac895e.jar
+C:\Users\Nicholas\AndroidWorkspace\InstaJet\app\build\intermediates\pre-dexed\debug\classes-b5a87dd26279630eda90871576329f0f8a4ae3b3.jar
