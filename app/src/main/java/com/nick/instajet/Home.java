@@ -4,8 +4,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.DownloadManager.Request;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -15,8 +17,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.CookieManager;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import java.util.Arrays;
+import java.util.prefs.Preferences;
 
 public class Home extends Activity implements ResponseGetterTaskListener {
 	
@@ -69,21 +75,21 @@ public class Home extends Activity implements ResponseGetterTaskListener {
 		dataGetter.execute(apiUrl);
 		
 		// pause download process while waiting for the response
-		
-		// TODO DEBUG
-		// Toast.makeText(this, apiUrl, Toast.LENGTH_LONG).show();
-		
 	}
 	
 	@Override
 	public void updateResponseObject(JSONObject j) {
-		try {
-			responseObject = new JSONObject(j.toString());
-			continueDownloadProcess();
-			
-		} catch (JSONException e) {
-			// making the new json object got problem. 
-			e.printStackTrace();
+		if (j == null) {
+			throwAlert("Empty response from server. Check URL.");
+		} else {
+			try {
+				responseObject = new JSONObject(j.toString());
+				continueDownloadProcess();
+
+			} catch (JSONException e) {
+				// making the new json object got problem.
+				throwAlert(e.toString());
+			}
 		}
 	}
 
@@ -95,6 +101,7 @@ public class Home extends Activity implements ResponseGetterTaskListener {
 			
 		} else {
 			// TODO received object not ok
+			throwAlert("Status Error: ");
 		}
 	}
 
@@ -114,13 +121,18 @@ public class Home extends Activity implements ResponseGetterTaskListener {
 				Request imageRequest = new Request(parsedImageUri);
 				imageRequest.setNotificationVisibility(Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 				imageRequest.allowScanningByMediaScanner();
-				imageRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, shortcode+"_image.jpg");
+				imageRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, shortcode + "_image.jpg");
 				/* debug */Log.w("home", parsedImageUri.toString());
 				imageDownloadId = dm.enqueue(imageRequest);
-				
+
+				JSONObject picUser = data.getJSONObject("user");
+				String picUsername = picUser.getString("username");
+				throwAlert("This picture is by " + picUsername);
 				
 			} catch (JSONException e) {
-				e.printStackTrace();
+				throwAlert(e.toString());
+			} catch (Exception ex) {
+				throwAlert("Not JSON exception. " + ex.toString());
 			}
 			
 		} else if (type.equals("video")) {
@@ -154,14 +166,20 @@ public class Home extends Activity implements ResponseGetterTaskListener {
 				videoRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, shortcode+"_video.mp4");
 				/* debug */Log.w("home", parsedVideoUri.toString());
 				videoDownloadId = dm.enqueue(videoRequest);
+
+				JSONObject picUser = data.getJSONObject("user");
+				String picUsername = picUser.getString("username");
+				throwAlert("This video is by " + picUsername);
 				
 				
 			} catch (JSONException e) {
-				e.printStackTrace();
+				throwAlert(e.toString());
 			}
 			
 		} else {
 			// TODO throw error for weird type
+			throwAlert("Unknown Content Type");
+			return;
 		}
 	}
 	
@@ -174,6 +192,18 @@ public class Home extends Activity implements ResponseGetterTaskListener {
 		} catch (JSONException e) {
 			e.printStackTrace();
 			return false;
+		}
+	}
+
+	private int getStatusCode() {
+		try {
+			JSONObject data = responseObject.getJSONObject("meta");
+			int type = data.getInt("code");
+			return type;
+
+		} catch (JSONException e) {
+			throwAlert(e.toString());
+			return -1;
 		}
 	}
 	
@@ -198,9 +228,50 @@ public class Home extends Activity implements ResponseGetterTaskListener {
 		EditText urlField = (EditText) findViewById(R.id.EditTextUrlField);
 		urlField.setText("http://instagram.com/p/wNjVZvmoZx/");
 	}
+
+	public void logout(View v) {
+		// 1. Instantiate an AlertDialog.Builder with its constructor
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+		// 2. Chain together various setter methods to set the dialog characteristics
+		builder.setMessage("Are you sure you want to log out?");
+		builder.setTitle("Logout and Exit");
+		builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				logoutActual();
+			}
+		});
+		builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				// do nothing
+			}
+		});
+		builder.show();
+	}
+
+	public void logoutActual() {
+		sharedPrefs.edit().clear().apply();
+		finish();
+	}
 	
-	
-	
+	/* THROW ALERT FOR ERROR */
+	public void throwAlert() {
+		throwAlert("A serious error has occured. Please try again.");
+	}
+	public void throwAlert(String message) {
+		// 1. Instantiate an AlertDialog.Builder with its constructor
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+		// 2. Chain together various setter methods to set the dialog characteristics
+		builder.setMessage(message);
+		builder.setTitle("Oh No!");
+		builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				// do nothing
+			}
+		});
+		builder.show();
+	}
 	
 	
 	

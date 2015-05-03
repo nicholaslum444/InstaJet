@@ -21,7 +21,15 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
         	android:layout_gravity="center_horizontal"
-            android:text="Instagram Share URL:" />
+            android:text="Instagram Share URL:"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/LayoutUrlField"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
 
         <EditText
             android:id="@+id/EditTextUrlField"
@@ -51,13 +59,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="testing"
-        android:text="Button" />
+        android:text="Example Picture" />
 
     <Button
         android:id="@+id/button3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="testing2"
-        android:text="Button" />
+        android:text="Example Video" />
+
+    <Button
+        android:id="@+id/btn_logout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="logout"
+        android:text="Logout" />
 
 </LinearLayout>
