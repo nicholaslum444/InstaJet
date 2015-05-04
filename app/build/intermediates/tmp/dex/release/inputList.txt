@@ -1,4 +1,0 @@
-D:\Workspace\InstaJet\app\build\intermediates\classes\release
-D:\Workspace\InstaJet\app\build\intermediates\pre-dexed\release\support-annotations-21.0.3-f0c9fc5ec833eba35f86bcc5efcd9452e820aca5.jar
-D:\Workspace\InstaJet\app\build\intermediates\pre-dexed\release\internal_impl-21.0.3-74f7f17621e71408537821229b1c968d4a2fcf60.jar
-D:\Workspace\InstaJet\app\build\intermediates\pre-dexed\release\classes-a7218d1a7c0dea3a9dffb41c6f217bfd2078a449.jar
