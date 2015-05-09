@@ -1,28 +1,24 @@
 package com.nick.instajet;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
 
 import javax.net.ssl.HttpsURLConnection;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
 
-public class ResponseGetterTask extends AsyncTask<String, Void, JSONObject> {
+public class InstagramApiHandlerTask extends AsyncTask<String, Void, JSONObject> {
+
+	InstagramApiHandlerTaskListener mCaller;
 	
-	ResponseGetterTaskListener mCaller;
-	
-	public ResponseGetterTask(ResponseGetterTaskListener caller) {
+	public InstagramApiHandlerTask(InstagramApiHandlerTaskListener caller) {
 		mCaller = caller;
 	}
 
@@ -81,7 +77,7 @@ public class ResponseGetterTask extends AsyncTask<String, Void, JSONObject> {
 	
 	@Override
 	protected void onPostExecute(JSONObject j) {
-		mCaller.updateResponseObject(j);
+		mCaller.receiveApiResponse(j);
 	}
 
 }
