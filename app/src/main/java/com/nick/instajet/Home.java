@@ -1,8 +1,10 @@
 package com.nick.instajet;
 
+import android.support.v7.widget.Toolbar;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.support.v7.app.ActionBarActivity;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
@@ -24,7 +26,7 @@ import android.widget.Toast;
 import java.util.Arrays;
 import java.util.prefs.Preferences;
 
-public class Home extends Activity implements ResponseGetterTaskListener {
+public class Home extends ActionBarActivity implements ResponseGetterTaskListener {
 	
 	// TODO set this to the user's own via authing
 	String accessToken = "188264189.1fb234f.1cab308d94f24fabbc9dba5895a417ca";
@@ -281,7 +283,11 @@ public class Home extends Activity implements ResponseGetterTaskListener {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_home);
-		
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
+        }
 		// TODO if not logged in, then open popup to login
 		sharedPrefs = getSharedPreferences("InstaJetPrefs", MODE_PRIVATE);
 		checkLogin();
