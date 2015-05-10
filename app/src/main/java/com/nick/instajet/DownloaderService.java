@@ -1,12 +1,10 @@
 package com.nick.instajet;
 
-import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Context;
 import android.net.Uri;
@@ -35,10 +33,10 @@ public class DownloaderService
     // TODO: Rename parameters
     private static final String PARAM_FULL_URL = "com.nick.instajet.extra.full_url";
 
-    private static final String apiUrlTemplate = "https://api.instagram.com/v1/media/shortcode/%1$s?access_token=%2$s";
-    private static final String imageFilenameTemplate = "%1$s_%2$s_image.jpg";
-    private static final String coverFilenameTemplate = "%1$s_%2$s_cover.jpg";
-    private static final String videoFilenameTemplate = "%1$s_%2$s_video.mp4";
+    private static final String MEDIA_REQUEST_TEMPLATE = "https://api.instagram.com/v1/media/shortcode/%1$s?access_token=%2$s";
+    private static final String IMAGE_FILENAME_TEMPLATE = "%1$s_%2$s_image.jpg";
+    private static final String COVER_FILENAME_TEMPLATE = "%1$s_%2$s_cover.jpg";
+    private static final String VIDEO_FILENAME_TEMPLATE = "%1$s_%2$s_video.mp4";
 
     private static final int DATA_TYPE_IMAGE = 0;
     private static final int DATA_TYPE_VIDEO = 1;
@@ -95,7 +93,7 @@ public class DownloaderService
     private void handleDownloadUrl(String fullUrl) {
         Log.e("asd", "handing download url");
         String shortcode = getShortcode(fullUrl);
-        callInstagramApi(shortcode);
+        sendMediaRequest(shortcode);
     }
 
     private void continueHandleDownload(JSONObject apiResponseObj) {
@@ -130,11 +128,11 @@ public class DownloaderService
         return shortcode;
     }
 
-    private void callInstagramApi(String shortcode) {
+    private void sendMediaRequest(String shortcode) {
         accessToken = getSharedPreferences("InstaJetPrefs", MODE_PRIVATE).getString("accessToken", "notoken");
 
         // construct the api url
-        String apiUrl = String.format(apiUrlTemplate, shortcode, accessToken);
+        String apiUrl = String.format(MEDIA_REQUEST_TEMPLATE, shortcode, accessToken);
 
         // execute the json getter
         InstagramApiHandlerTask dataGetter = new InstagramApiHandlerTask(this);
@@ -221,7 +219,7 @@ public class DownloaderService
     private void downloadImg(String imgUrl, String shortcode, String username) {
         // TODO
         Log.e("asd", "handing download img " + imgUrl);
-        String filename = String.format(imageFilenameTemplate, username, shortcode);
+        String filename = String.format(IMAGE_FILENAME_TEMPLATE, username, shortcode);
         DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
         Uri parsedImageUri = Uri.parse(imgUrl);
 
@@ -236,8 +234,8 @@ public class DownloaderService
     private void downloadVideo(String coverUrl, String videoUrl, String shortcode, String username) {
         // TODO
         Log.e("asd", "handing download vid " + videoUrl);
-        String coverFilename = String.format(coverFilenameTemplate, username, shortcode);
-        String videoFilename = String.format(videoFilenameTemplate, username, shortcode);
+        String coverFilename = String.format(COVER_FILENAME_TEMPLATE, username, shortcode);
+        String videoFilename = String.format(VIDEO_FILENAME_TEMPLATE, username, shortcode);
         DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
         Uri parsedImageUri = Uri.parse(coverUrl);
         Uri parsedVideoUri = Uri.parse(videoUrl);

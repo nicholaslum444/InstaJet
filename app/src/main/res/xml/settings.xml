@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent">
+    <PreferenceCategory
+        android:title="Account">
+
+        <com.nick.instajet.LogoutDialogPreference
+            android:key="logoutPreference"
+            android:title="Logout and Exit"
+            android:summary="Logout from your Instagram account and exit" />
+
+        <CheckBoxPreference
+            android:key="pref_sync"
+            android:title="Sync"
+            android:summary="Sync stuff tht your dont actually need"
+            android:defaultValue="true" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

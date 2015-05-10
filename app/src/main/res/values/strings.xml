@@ -8,5 +8,13 @@
 
 <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="ShareUrlInstructions">
+        1. Go to your Instagram app.
+        \n2. Navigate to the media you want to download.
+        \n3. From the media\'s context menu (the 3 dots), select Copy Share URL.
+        \n4. Return to this page and tap the Paste button.
+        \n5. Tap the Download button to download the chosen media.
+        \n\nNote: The Share URL can only be gotten from public profiles. For private profiles, use the Search function in the Search tab.
+    </string>
 
 </resources>
