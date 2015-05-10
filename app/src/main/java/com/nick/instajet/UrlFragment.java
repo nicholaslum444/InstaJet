@@ -2,6 +2,8 @@ package com.nick.instajet;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ClipDescription;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,9 +14,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import java.util.ArrayList;
 
 
 /**
@@ -73,8 +78,15 @@ public class UrlFragment extends Fragment implements View.OnClickListener {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_url, container, false);
-        Button urlDlBtn = (Button) v.findViewById(R.id.ButtonDownloadByUrl);
-        urlDlBtn.setOnClickListener(this);
+
+        ArrayList<Button> buttons = new ArrayList<>();
+        buttons.add((Button) v.findViewById(R.id.ButtonDownloadByUrl));
+        buttons.add((Button) v.findViewById(R.id.ButtonClearUrlField));
+        buttons.add((Button) v.findViewById(R.id.ButtonPasteToUrlField));
+
+        for (Button b : buttons) {
+            b.setOnClickListener(this);
+        }
 
         return v;
     }
@@ -83,12 +95,20 @@ public class UrlFragment extends Fragment implements View.OnClickListener {
     public void onClick(View v) {
         Log.e("asd", "went into onclick");
         switch (v.getId()) {
+            case R.id.ButtonClearUrlField :
+                onClickButtonClearUrlField(v);
+                break;
+
+            case R.id.ButtonPasteToUrlField :
+                onClickButtonPasteToUrlField(v);
+                break;
+
             case R.id.ButtonDownloadByUrl :
                 onClickButtonDownloadUrl(v);
                 break;
 
             default :
-                Toast.makeText(this.getActivity(), "no method bound", Toast.LENGTH_LONG).show();
+                makeToast("no method bound");
                 break;
         }
     }
@@ -117,6 +137,30 @@ public class UrlFragment extends Fragment implements View.OnClickListener {
         mListener = null;
     }
 
+    public void onClickButtonClearUrlField(View v) {
+        EditText editTextUrl = (EditText) getActivity().findViewById(R.id.EditTextUrlField);
+        editTextUrl.setText("");
+    }
+
+    public void onClickButtonPasteToUrlField(View v) {
+        ClipboardManager cm = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+        if (cm.hasPrimaryClip()) {
+            ClipDescription desc = cm.getPrimaryClipDescription();
+            Log.e("asd", desc.toString());
+            if (desc.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)) {
+                EditText editTextUrl = (EditText) getActivity().findViewById(R.id.EditTextUrlField);
+                CharSequence pasteText = cm.getPrimaryClip().getItemAt(0).getText();
+                editTextUrl.setText(pasteText);
+            } else {
+                Log.e("asd", "not text");
+                makeToast("Unable to paste non-text data. Please copy from Instagram again.");
+            }
+        } else {
+            Log.e("asd", "nothing to paste");
+            makeToast("Clipboard is empty. Please copy from Instagram again.");
+        }
+    }
+
     public void onClickButtonDownloadUrl(View v) {
         boolean isLoggedIn = getActivity().getSharedPreferences("InstaJetPrefs", Context.MODE_PRIVATE).getBoolean("isLoggedIn", false);
         if (isLoggedIn) {
@@ -130,6 +174,14 @@ public class UrlFragment extends Fragment implements View.OnClickListener {
         }
     }
 
+
+
+
+
+    private void makeToast(String msg) {
+        Toast.makeText(this.getActivity(), msg, Toast.LENGTH_LONG).show();
+    }
+
     private void showDownloadingAlert() {
         AlertDialog.Builder a = new AlertDialog.Builder(getActivity());
         a.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
@@ -139,7 +191,7 @@ public class UrlFragment extends Fragment implements View.OnClickListener {
         });
         a.setCancelable(false);
         a.setTitle("Downloading");
-        a.setMessage("Download will start shortly");
+        a.setMessage("Download will start shortly.");
         a.show();
     }
 

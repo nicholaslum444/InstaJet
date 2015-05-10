@@ -32,17 +32,41 @@
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:inputType="textUri"
             android:id="@+id/EditTextUrlField"
             android:hint="Instagram Share URL"
             android:layout_gravity="center"/>
 
-        <Button
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="right"
-            android:id="@+id/ButtonDownloadByUrl"
-            android:onClick="onClickButtonDownloadUrl"
-            android:text="Download"/>
+            android:orientation="horizontal">
+
+            <Button
+                android:layout_width="0px"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onClickButtonClearUrlField"
+                android:id="@+id/ButtonClearUrlField"
+                android:text="Clear"/>
+
+            <Button
+                android:layout_width="0px"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onClickButtonPasteToUrlField"
+                android:id="@+id/ButtonPasteToUrlField"
+                android:text="Paste"/>
+
+            <Button
+                android:layout_width="0px"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:id="@+id/ButtonDownloadByUrl"
+                android:onClick="onClickButtonDownloadUrl"
+                android:text="Download"/>
+
+        </LinearLayout>
 
         <ScrollView
             android:layout_width="match_parent"
@@ -63,7 +87,7 @@
                     android:textStyle="bold"
                     android:id="@+id/TextViewInstructionsTitle"
                     android:text="Instructions"
-                    android:layout_gravity="left"
+                    android:layout_gravity="start"
                     style="@android:style/TextAppearance.DeviceDefault.Medium"/>
 
                 <TextView
@@ -72,7 +96,7 @@
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:id="@+id/TextViewInstructionsText"
                     android:text="On the other hand, we denounce with righteous indignation and dislike men who are so beguiled and demoralized by the charms of pleasure of the moment, so blinded by desire, that they cannot foresee the pain and trouble that are bound to ensue; and equal blame belongs to those who fail in their duty through weakness of will, which is the same as saying through shrinking from toil and pain. These cases are perfectly simple and easy to distinguish. In a free hour, when our power of choice is untrammelled and when nothing prevents our being able to do what we like best, every pleasure is to be welcomed and every pain avoided. But in certain circumstances and owing to the claims of duty or the obligations of business it will frequently occur that pleasures have to be repudiated and annoyances accepted. The wise man therefore always holds in these matters to this principle of selection: he rejects pleasures to secure other greater pleasures, or else he endures pains to avoid worse pains."
-                    android:layout_gravity="left"/>
+                    android:layout_gravity="start"/>
 
             </LinearLayout>
 

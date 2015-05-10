@@ -1,11 +1,17 @@
 package com.nick.instajet;
 
+import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.IntentService;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Environment;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -38,7 +44,8 @@ public class DownloaderService
     private static final int DATA_TYPE_VIDEO = 1;
     private static final int DATA_TYPE_ERROR = -1;
 
-     private String accessToken = "188264189.a3f9fc7.5c81d69e6de642d2a9dfdedfb1d237d8";
+    private String accessToken = "188264189.a3f9fc7.5c81d69e6de642d2a9dfdedfb1d237d8";
+    private String fullUrl = "";
 
     /**
      * Starts this service to perform action URL_DOWNLOAD with the given parameters. If
@@ -64,6 +71,7 @@ public class DownloaderService
             final String action = intent.getAction();
             if (ACTION_URL_DOWNLOAD.equals(action)) {
                 final String fullUrl = intent.getStringExtra(PARAM_FULL_URL);
+                this.fullUrl = fullUrl;
                 handleDownloadUrl(fullUrl);
             }
         }
@@ -73,6 +81,7 @@ public class DownloaderService
     public void receiveApiResponse(JSONObject o) {
         if (o == null) {
             Log.e("asd", "o is null");
+            showServerNoResponseNotif();
         } else {
             Log.e("asd", o.toString());
             continueHandleDownload(o);
@@ -246,5 +255,29 @@ public class DownloaderService
         videoRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, videoFilename);
 
         dm.enqueue(videoRequest);
+    }
+
+    private void showServerNoResponseNotif() {
+        NotificationCompat.Builder n = new NotificationCompat.Builder(this);
+        n.setSmallIcon(R.drawable.ic_launcher);
+        n.setContentTitle("Download Failed");
+        n.setContentText("Please try again.");
+        n.setAutoCancel(true);
+
+        Intent homeIntent = new Intent(this, Home.class);
+        TaskStackBuilder sb = TaskStackBuilder.create(this);
+        sb.addParentStack(Home.class);
+        sb.addNextIntent(homeIntent);
+        PendingIntent homePendingIntent = sb.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        n.setContentIntent(homePendingIntent);
+
+        NotificationCompat.BigTextStyle nbig = new NotificationCompat.BigTextStyle();
+        nbig.setBigContentTitle("Download Failed");
+        nbig.setSummaryText("Error code: 0x00bb6afa541");
+        nbig.bigText("Media could not be downloaded. Please check the selection or the URL and try again.");
+        n.setStyle(nbig);
+
+        NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        nm.notify(this.fullUrl.hashCode(), n.build());
     }
 }

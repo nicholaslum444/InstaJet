@@ -44,6 +44,10 @@ public class Home
 	/** ON CREATE */
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		Log.e("asd", "inside oncreate");
+		if (savedInstanceState != null) {
+			Log.e("asd", savedInstanceState.toString());
+		}
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_home);
 
@@ -58,6 +62,18 @@ public class Home
 			startActivity(intent);
 			finish();
 		}
+	}
+
+	@Override
+	protected void onNewIntent(Intent intent) {
+		//super.onNewIntent(intent);
+		Log.e("asd", "newintent called");
+	}
+
+	@Override
+	protected void onDestroy() {
+		Log.e("asd", "destroying");
+		super.onDestroy();
 	}
 
 	@Override
