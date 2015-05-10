@@ -38,7 +38,7 @@ public class DownloaderService
     private static final int DATA_TYPE_VIDEO = 1;
     private static final int DATA_TYPE_ERROR = -1;
 
-    private String accessToken = "188264189.a3f9fc7.5c81d69e6de642d2a9dfdedfb1d237d8";
+     private String accessToken = "188264189.a3f9fc7.5c81d69e6de642d2a9dfdedfb1d237d8";
 
     /**
      * Starts this service to perform action URL_DOWNLOAD with the given parameters. If
@@ -122,6 +122,8 @@ public class DownloaderService
     }
 
     private void callInstagramApi(String shortcode) {
+        accessToken = getSharedPreferences("InstaJetPrefs", MODE_PRIVATE).getString("accessToken", "notoken");
+
         // construct the api url
         String apiUrl = String.format(apiUrlTemplate, shortcode, accessToken);
 

@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.DownloadManager.Request;
+import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.DialogInterface;
@@ -25,6 +26,7 @@ import android.widget.Toast;
 
 import java.net.URL;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.prefs.Preferences;
 
 public class Home
@@ -32,14 +34,30 @@ public class Home
 		implements UrlFragment.OnFragmentInteractionListener,
 			SearchFragment.OnFragmentInteractionListener {
 
-	FragmentManager fm = getFragmentManager();
+	private FragmentManager fm = getFragmentManager();
+
+	private HashMap<String, Fragment> allFragments = new HashMap<>();
+
+	private static final String URL_FRAG_TAG = "urlFragTag";
+	private static final String SEARCH_FRAG_TAG = "searchFragTag";
 	
 	/** ON CREATE */
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_home);
-		onClickButtonUrl(null);
+
+		boolean isLoggedIn = getSharedPreferences("InstaJetPrefs", MODE_PRIVATE).getBoolean("isLoggedIn", false);
+
+		if (isLoggedIn) {
+			// go to url download by default
+			onClickButtonUrl(null);
+		} else {
+			// show login page
+			Intent intent = new Intent(this, Login.class);
+			startActivity(intent);
+			finish();
+		}
 	}
 
 	@Override
@@ -68,16 +86,40 @@ public class Home
 
 	public void onClickButtonUrl(View v) {
 		FragmentTransaction ft = fm.beginTransaction();
-		UrlFragment urlFrag = UrlFragment.newInstance("hello", "world");
-		ft.replace(R.id.LayoutFragment, urlFrag, "urlFragTag");
+		UrlFragment urlFrag = (UrlFragment) getFrag(URL_FRAG_TAG);
+		ft.replace(R.id.LayoutFragment, urlFrag, URL_FRAG_TAG);
 		ft.commit();
 	}
 
 	public void onClickButtonSearch(View v) {
 		FragmentTransaction ft = fm.beginTransaction();
-		SearchFragment searchFrag = SearchFragment.newInstance("hello", "world");
-		ft.replace(R.id.LayoutFragment, searchFrag, "searchFragTag");
+		SearchFragment searchFrag = (SearchFragment) getFrag(SEARCH_FRAG_TAG);
+		ft.replace(R.id.LayoutFragment, searchFrag, SEARCH_FRAG_TAG);
 		ft.commit();
+	}
+
+	private Fragment getFrag(String fragTag) {
+		if (allFragments.containsKey(fragTag)) {
+			return allFragments.get(fragTag);
+		} else {
+			Fragment frag;
+			switch (fragTag) {
+				case URL_FRAG_TAG :
+					frag = UrlFragment.newInstance("asd", "asd");
+					break;
+
+				case SEARCH_FRAG_TAG :
+					frag = SearchFragment.newInstance("asd", "asd");
+					break;
+
+				default :
+					Log.e("asd", "no such tag");
+					frag = UrlFragment.newInstance("asd", "asd");
+					break;
+			}
+			allFragments.put(fragTag, frag);
+			return frag;
+		}
 	}
 
 }

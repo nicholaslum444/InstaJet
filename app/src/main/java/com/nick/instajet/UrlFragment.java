@@ -1,6 +1,10 @@
 package com.nick.instajet;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -114,15 +118,30 @@ public class UrlFragment extends Fragment implements View.OnClickListener {
     }
 
     public void onClickButtonDownloadUrl(View v) {
-        EditText urlField = (EditText) getActivity().findViewById(R.id.EditTextUrlField);
-        String urlString = urlField.getText().toString();
-        DownloaderService.startUrlDownload(getActivity(), urlString);
+        boolean isLoggedIn = getActivity().getSharedPreferences("InstaJetPrefs", Context.MODE_PRIVATE).getBoolean("isLoggedIn", false);
+        if (isLoggedIn) {
+            EditText urlField = (EditText) getActivity().findViewById(R.id.EditTextUrlField);
+            String urlString = urlField.getText().toString();
+            DownloaderService.startUrlDownload(getActivity(), urlString);
+            showDownloadingAlert();
+        } else {
+            Intent intent = new Intent(getActivity(), Login.class);
+            startActivity(intent);
+        }
     }
 
-
-
-
-
+    private void showDownloadingAlert() {
+        AlertDialog.Builder a = new AlertDialog.Builder(getActivity());
+        a.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which){
+                dialog.dismiss();
+            }
+        });
+        a.setCancelable(false);
+        a.setTitle("Downloading");
+        a.setMessage("Download will start shortly");
+        a.show();
+    }
 
 
     /**

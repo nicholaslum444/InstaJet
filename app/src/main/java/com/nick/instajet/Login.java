@@ -1,6 +1,8 @@
 package com.nick.instajet;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.webkit.URLUtil;
@@ -16,6 +18,7 @@ public class Login extends Activity {
 
 	SharedPreferences sharedPrefs;
 	SharedPreferences.Editor sharedPrefsEditor;
+    Context context = this;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -47,6 +50,8 @@ public class Login extends Activity {
                         sharedPrefsEditor.putString("accessToken", accessToken);
                         sharedPrefsEditor.putBoolean("isLoggedIn", true);
                         sharedPrefsEditor.apply();
+                        Intent intent = new Intent(context, Home.class);
+                        startActivity(intent);
                         finish();
                     }
 	            }
