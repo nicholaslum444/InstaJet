@@ -10,12 +10,6 @@
             android:title="Logout and Exit"
             android:summary="Logout from your Instagram account and exit" />
 
-        <CheckBoxPreference
-            android:key="pref_sync"
-            android:title="Sync"
-            android:summary="Sync stuff tht your dont actually need"
-            android:defaultValue="true" />
-
     </PreferenceCategory>
 
 </PreferenceScreen>

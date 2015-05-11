@@ -41,7 +41,7 @@ public class Home
 
 		if (isLoggedIn) {
 			// go to url download by default
-			onClickButtonUrl(null);
+			onClickButtonSearch(null);
 		} else {
 			// show login page
 			Intent intent = new Intent(this, Login.class);

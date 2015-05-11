@@ -189,7 +189,7 @@ public class UrlFragment extends Fragment implements View.OnClickListener {
     }
 
     private void makeToast(String msg) {
-        Toast.makeText(this.getActivity(), msg, Toast.LENGTH_LONG).show();
+        Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
     }
 
     private void showDownloadingAlert() {
