@@ -165,9 +165,13 @@ public class UrlFragment extends Fragment implements View.OnClickListener {
         boolean isLoggedIn = getActivity().getSharedPreferences("InstaJetPrefs", Context.MODE_PRIVATE).getBoolean("isLoggedIn", false);
         if (isLoggedIn) {
             EditText urlField = (EditText) getActivity().findViewById(R.id.EditTextUrlField);
-            String urlString = urlField.getText().toString();
-            DownloaderService.startUrlDownload(getActivity(), urlString);
-            showDownloadingAlert();
+            if (isEmpty(urlField) || isWhitespace(urlField)) {
+                makeToast("URL field empty!");
+            } else {
+                String urlString = urlField.getText().toString().trim();
+                DownloaderService.startUrlDownload(getActivity(), urlString);
+                showDownloadingAlert();
+            }
         } else {
             Intent intent = new Intent(getActivity(), Login.class);
             startActivity(intent);
@@ -176,7 +180,13 @@ public class UrlFragment extends Fragment implements View.OnClickListener {
 
 
 
+    private boolean isWhitespace(EditText e) {
+        return e.getText().toString().trim().length() == 0;
+    }
 
+    private boolean isEmpty(EditText e) {
+        return e.getText().length() == 0;
+    }
 
     private void makeToast(String msg) {
         Toast.makeText(this.getActivity(), msg, Toast.LENGTH_LONG).show();
