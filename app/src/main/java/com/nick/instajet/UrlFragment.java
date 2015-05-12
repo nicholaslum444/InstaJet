@@ -76,6 +76,7 @@ public class UrlFragment extends Fragment implements View.OnClickListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Log.e("asd", "url oncreateview");
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_url, container, false);
 

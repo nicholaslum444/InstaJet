@@ -15,6 +15,9 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
@@ -100,11 +103,11 @@ public class DownloaderService
         Log.e("asd", "continue handing download");
         switch (getDataType(apiResponseObj)) {
             case DATA_TYPE_IMAGE :
-                downloadImg(getImageUrl(apiResponseObj), getShortcode(apiResponseObj), getUsername(apiResponseObj));
+                downloadImgWithShortcode(getImageUrl(apiResponseObj), getShortcode(apiResponseObj), getUsername(apiResponseObj));
                 break;
 
             case DATA_TYPE_VIDEO :
-                downloadVideo(getImageUrl(apiResponseObj), getVideoUrl(apiResponseObj), getShortcode(apiResponseObj), getUsername(apiResponseObj));
+                downloadVideoWithShortcode(getImageUrl(apiResponseObj), getVideoUrl(apiResponseObj), getShortcode(apiResponseObj), getUsername(apiResponseObj));
                 break;
 
             default :
@@ -130,6 +133,13 @@ public class DownloaderService
 
     private void sendMediaRequest(String shortcode) {
         accessToken = getSharedPreferences("InstaJetPrefs", MODE_PRIVATE).getString("accessToken", "notoken");
+        try {
+            accessToken = URLEncoder.encode(accessToken, "UTF-8");
+            shortcode = URLEncoder.encode(shortcode, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            Log.e("asd", e.getMessage());
+            e.printStackTrace();
+        }
 
         // construct the api url
         String apiUrl = String.format(MEDIA_REQUEST_TEMPLATE, shortcode, accessToken);
@@ -216,7 +226,7 @@ public class DownloaderService
         }
     }
 
-    private void downloadImg(String imgUrl, String shortcode, String username) {
+    private void downloadImgWithShortcode(String imgUrl, String shortcode, String username) {
         // TODO
         Log.e("asd", "handing download img " + imgUrl);
         String filename = String.format(IMAGE_FILENAME_TEMPLATE, username, shortcode);
@@ -231,7 +241,7 @@ public class DownloaderService
         dm.enqueue(imageRequest);
     }
 
-    private void downloadVideo(String coverUrl, String videoUrl, String shortcode, String username) {
+    private void downloadVideoWithShortcode(String coverUrl, String videoUrl, String shortcode, String username) {
         // TODO
         Log.e("asd", "handing download vid " + videoUrl);
         String coverFilename = String.format(COVER_FILENAME_TEMPLATE, username, shortcode);

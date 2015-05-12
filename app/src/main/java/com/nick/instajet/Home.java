@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import java.util.HashMap;
 
@@ -19,8 +20,11 @@ public class Home
 			SettingsFragment.OnFragmentInteractionListener {
 
 	private FragmentManager fm = getFragmentManager();
+	private HashMap<String, Fragment> fragmentCache = new HashMap<>();
 
-	private HashMap<String, Fragment> allFragments = new HashMap<>();
+	private static final long BACK_PRESS_DELAY_MILS = 2000;
+	private long backPressedTimePrevious = 0;
+	private Toast backPressedToast;
 
 	private static final String URL_FRAG_TAG = "urlFragTag";
 	private static final String SEARCH_FRAG_TAG = "searchFragTag";
@@ -72,6 +76,27 @@ public class Home
 		// required method for OnFragmentInteractionListener interface
 	}
 
+	@Override
+	public void onBackPressed() {
+		if (backPressedToast != null) {
+			backPressedToast.cancel();
+		}
+
+		long backPressedTimeNow =  System.currentTimeMillis();
+
+		if (backPressedTimeNow < (backPressedTimePrevious + BACK_PRESS_DELAY_MILS)) {
+			// carry on exiting
+			super.onBackPressed();
+		} else {
+			// wait for second press
+			backPressedTimePrevious = backPressedTimeNow;
+			backPressedToast = Toast.makeText(this, "Press BACK again to exit", Toast.LENGTH_SHORT);
+			backPressedToast.show();
+		}
+	}
+
+
+
 	public void onClickButtonUrl(View v) {
 		FragmentTransaction ft = fm.beginTransaction();
 		UrlFragment urlFrag = (UrlFragment) getFrag(URL_FRAG_TAG);
@@ -94,8 +119,8 @@ public class Home
 	}
 
 	private Fragment getFrag(String fragTag) {
-		if (allFragments.containsKey(fragTag)) {
-			return allFragments.get(fragTag);
+		if (fragmentCache.containsKey(fragTag)) {
+			return fragmentCache.get(fragTag);
 		} else {
 			Fragment frag;
 			switch (fragTag) {
@@ -116,7 +141,7 @@ public class Home
 					frag = UrlFragment.newInstance("asd", "asd");
 					break;
 			}
-			allFragments.put(fragTag, frag);
+			fragmentCache.put(fragTag, frag);
 			return frag;
 		}
 	}

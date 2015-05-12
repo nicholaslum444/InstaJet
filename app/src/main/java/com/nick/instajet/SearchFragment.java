@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -25,6 +26,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 
@@ -83,16 +87,18 @@ public class SearchFragment extends Fragment implements InstagramApiHandlerTaskL
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Log.e("asd", "search oncreateview");
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_search, container, false);
 
-        EditText searchField = (EditText) v.findViewById(R.id.EditTextSearchField);
+        final EditText searchField = (EditText) v.findViewById(R.id.EditTextSearchField);
         searchField.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(searchField.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
                     performSearch();
                     return true;
                 }
@@ -133,10 +139,17 @@ public class SearchFragment extends Fragment implements InstagramApiHandlerTaskL
             makeToast("Please enter a search term");
         } else {
             showLoadingSign();
-            String searchTerm = searchField.getText().toString().trim();
-            makeToast("Searching " + searchTerm);
 
             String accessToken = getActivity().getSharedPreferences("InstaJetPrefs", Context.MODE_PRIVATE).getString("accessToken", "notoken");
+            String searchTerm = searchField.getText().toString().trim();
+            try {
+                // convert the user input to proper url format
+                accessToken = URLEncoder.encode(accessToken, "UTF-8");
+                searchTerm = URLEncoder.encode(searchTerm, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                Log.e("asd", e.getMessage());
+                e.printStackTrace();
+            }
 
             // construct the api url
             String apiUrl = String.format(SEARCH_REQUEST_TEMPLATE, searchTerm, accessToken);
@@ -183,7 +196,7 @@ public class SearchFragment extends Fragment implements InstagramApiHandlerTaskL
             }
 
             ListView resultsList = (ListView) getActivity().findViewById(R.id.ListViewSearchResults);
-            ArrayAdapter<JSONObject> resultsAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, users);
+            SearchResultsListAdapter resultsAdapter = new SearchResultsListAdapter(getActivity(), data);
             resultsList.setAdapter(resultsAdapter);
 
         } catch (JSONException e) {
