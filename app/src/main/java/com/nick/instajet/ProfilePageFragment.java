@@ -278,6 +278,9 @@ public class ProfilePageFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void receiveApiResponse(JSONObject j) {
+        if (getActivity() == null) {
+            return;
+        }
         continueSetupRelationshipDetails(j);
     }
 

@@ -103,6 +103,19 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
     }
 
     private void setupStream() {
+        ListView listViewPhotoStream = (ListView) getView().findViewById(R.id.ListViewPhotoStream);
+        listViewPhotoStream.setFooterDividersEnabled(true);
+        Button b = new Button(getActivity());
+        b.setText("Load more");
+        b.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                requestNextPhotoSet(nextUrl);
+            }
+        });
+        b.setLayoutParams(new ListView.LayoutParams(ListView.LayoutParams.MATCH_PARENT, ListView.LayoutParams.WRAP_CONTENT));
+        listViewPhotoStream.addFooterView(b);
+
         String firstApiUrl = "";
 
         switch (streamType) {
@@ -151,7 +164,6 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
         setLoadMoreButtonVisibility(View.GONE);
 
         Log.e("asd", nextUrl);
-        makeToast(nextUrl);
 
         new InstagramApiHandlerTask(this).execute(nextUrl);
     }
@@ -186,11 +198,13 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
 
             // settle pagination
             JSONObject pagination = response.getJSONObject("pagination");
-            String nextUrlTemp = pagination.optString(nextUrl);
+            String nextUrlTemp = pagination.optString("next_url", null);
             if (nextUrlTemp == null) {
+                Log.e("asd", "no more url");
                 setLoadMoreButtonVisibility(View.GONE);
                 nextUrl = null;
             } else {
+                Log.e("asd", "have more url");
                 nextUrl = pagination.getString("next_url");
                 setLoadMoreButtonVisibility(View.VISIBLE);
             }
@@ -226,7 +240,10 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
 
     @Override
     public void receiveApiResponse(JSONObject j) {
-        // TODO
+        if (getActivity() == null) {
+            return;
+        }
+
         if (j == null) {
             Log.e("asd", "j is null");
         } else {
@@ -239,16 +256,22 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
     }
 
     private void setLoadMoreButtonVisibility(int visibility) {
-        Button buttonPhotoStreamLoadMore = (Button) getView().findViewById(R.id.ButtonPhotoStreamLoadMore);
-        buttonPhotoStreamLoadMore.setVisibility(visibility);
+//        Button buttonPhotoStreamLoadMore = (Button) getView().findViewById(R.id.ButtonPhotoStreamLoadMore);
+//        buttonPhotoStreamLoadMore.setVisibility(visibility);
     }
 
     private void setProgressBarVisibility(int visibility) {
+        if (getView() == null) {
+            return;
+        }
         ProgressBar progressBarLoadProgress = (ProgressBar) getView().findViewById(R.id.ProgressBarLoadProgress);
         progressBarLoadProgress.setVisibility(visibility);
     }
 
     private void setRestrictedWarningVisibility(int visibility) {
+        if (getView() == null) {
+            return;
+        }
         LinearLayout layoutRestrictedWarning = (LinearLayout) getView().findViewById(R.id.LayoutRestrictedWarning);
         layoutRestrictedWarning.setVisibility(visibility);
     }

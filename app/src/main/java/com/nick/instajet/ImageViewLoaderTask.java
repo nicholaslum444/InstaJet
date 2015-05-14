@@ -36,6 +36,17 @@ public class ImageViewLoaderTask extends AsyncTask<Void, Void, Bitmap> {
         Log.e("asd", ""+hasProgressBar);
     }
 
+    public ImageViewLoaderTask(ImageView imageView, ProgressBar progressBar, String imageUrl) {
+        this.imageView = imageView;
+        this.imageUrl = imageUrl;
+        this.imageCache = null;
+        this.hasCache = false;
+        this.hasProgressBar = true;
+        this.progressBar = progressBar;
+        this.progressBar.setVisibility(View.VISIBLE);
+        Log.e("asd", ""+hasProgressBar);
+    }
+
     public ImageViewLoaderTask(ImageView imageView, String imageUrl, HashMap<String, Bitmap> imageCache) {
         this.imageView = imageView;
         this.imageUrl = imageUrl;

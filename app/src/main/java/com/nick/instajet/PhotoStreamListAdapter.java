@@ -2,9 +2,11 @@ package com.nick.instajet;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ProgressBar;
@@ -53,11 +55,19 @@ public class PhotoStreamListAdapter extends BaseAdapter implements ListAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         View view = caller.getLayoutInflater().inflate(R.layout.listitem_photo_stream, null);
         JSONObject mediaData = mediaList.optJSONObject(position);
-        setupMediaItem(view, mediaData);
+        setupMediaItem(view, mediaData, position);
         return view;
     }
 
-    private void setupMediaItem(View rowView, JSONObject mediaData) {
+    private void setupMediaItem(View rowView, final JSONObject mediaData, final int position) {
+        Button buttonDownloadMedia = (Button) rowView.findViewById(R.id.ButtonDownloadMedia);
+        buttonDownloadMedia.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DownloaderService.startDirectMediaDownload(caller, mediaData.toString());
+            }
+        });
+
         TextView textViewUsername = (TextView) rowView.findViewById(R.id.TextViewUsername);
         JSONObject user = mediaData.optJSONObject("user");
         String username = user.optString("username", "(Username not available)");
@@ -117,6 +127,11 @@ public class PhotoStreamListAdapter extends BaseAdapter implements ListAdapter {
             imageViewPhotoStreamImage.setImageBitmap(imageCache.get(imageUrl));
         } else {
             new ImageViewLoaderTask(imageViewPhotoStreamImage, progressBar, imageUrl, imageCache).execute();
+        }
+
+        if (imageCache.size() >= 51) {
+            Log.e("asd", "clearing old cache to save space");
+            imageCache = new HashMap<>();
         }
     }
 }

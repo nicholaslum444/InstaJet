@@ -186,6 +186,10 @@ public class SearchFragment extends Fragment implements InstagramApiHandlerTaskL
 
     @Override
     public void receiveApiResponse(JSONObject o) {
+        if (getActivity() == null) {
+            return;
+        }
+
         hideLoadingSign();
         if (o == null) {
             Log.e("asd", "o is null");

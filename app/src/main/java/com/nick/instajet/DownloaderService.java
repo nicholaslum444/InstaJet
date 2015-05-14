@@ -166,13 +166,13 @@ public class DownloaderService
         try {
             mediaData = new JSONObject(mediaDataString);
 
-            switch (getDataType(mediaData)) {
+            switch (getDataTypeMediaObj(mediaData)) {
                 case DATA_TYPE_IMAGE :
-                    downloadImgDirect();
+                    downloadImgDirect(getImageUrlMediaObj(mediaData), getUsernameMediaObj(mediaData), getShortcodeMediaObj(mediaData));
                     break;
 
                 case DATA_TYPE_VIDEO :
-                    downloadVideoDirect();
+                    downloadVideoDirect(getImageUrlMediaObj(mediaData), getVideoUrlMediaObj(mediaData), getUsernameMediaObj(mediaData), getShortcodeMediaObj(mediaData));
                     break;
 
                 default :
@@ -231,6 +231,18 @@ public class DownloaderService
         }
     }
 
+    private String getShortcodeMediaObj(JSONObject o) {
+        try {
+            String link = o.getString("link");
+            String shortcode = getShortcode(link);
+            return shortcode;
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "no shortcode";
+        }
+    }
+
     private String getUsername(JSONObject o) {
         try {
             JSONObject data = o.getJSONObject("data");
@@ -244,10 +256,42 @@ public class DownloaderService
         }
     }
 
+    private String getUsernameMediaObj(JSONObject o) {
+        try {
+            JSONObject user = o.getJSONObject("user");
+            String username = user.getString("username");
+            return username;
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "no username";
+        }
+    }
+
     public static int getDataType(JSONObject o) {
         try {
             JSONObject data = o.getJSONObject("data");
             String type = data.getString("type");
+            switch (type) {
+                case "image" :
+                    return DATA_TYPE_IMAGE;
+
+                case "video" :
+                    return DATA_TYPE_VIDEO;
+
+                default :
+                    return DATA_TYPE_ERROR;
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return DATA_TYPE_ERROR;
+        }
+    }
+
+    public static int getDataTypeMediaObj(JSONObject o) {
+        try {
+            String type = o.getString("type");
             switch (type) {
                 case "image" :
                     return DATA_TYPE_IMAGE;
@@ -280,10 +324,38 @@ public class DownloaderService
         }
     }
 
+    private String getImageUrlMediaObj(JSONObject o) {
+        try {
+            JSONObject images = o.getJSONObject("images");
+            JSONObject stdResImage = images.getJSONObject("standard_resolution");
+            String imageUrl = stdResImage.getString("url");
+
+            return imageUrl;
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "dead link";
+        }
+    }
+
     private String getVideoUrl(JSONObject o) {
         try {
             JSONObject data = o.getJSONObject("data");
             JSONObject videos = data.getJSONObject("videos");
+            JSONObject stdResVideo = videos.getJSONObject("standard_resolution");
+            String videoUrl = stdResVideo.getString("url");
+
+            return videoUrl;
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "dead link";
+        }
+    }
+
+    private String getVideoUrlMediaObj(JSONObject o) {
+        try {
+            JSONObject videos = o.getJSONObject("videos");
             JSONObject stdResVideo = videos.getJSONObject("standard_resolution");
             String videoUrl = stdResVideo.getString("url");
 
@@ -348,12 +420,41 @@ public class DownloaderService
         dm.enqueue(imageRequest);
     }
 
-    private void downloadImgDirect() {
+    private void downloadImgDirect(String imgUrl, String username, String shortcode) {
         Log.e("asd", "download image direct");
+        String filename = String.format(IMAGE_FILENAME_TEMPLATE, username, shortcode);
+        DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+        Uri parsedImageUri = Uri.parse(imgUrl);
+
+        DownloadManager.Request imageRequest = new DownloadManager.Request(parsedImageUri);
+        imageRequest.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        imageRequest.allowScanningByMediaScanner();
+        imageRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename);
+
+        dm.enqueue(imageRequest);
     }
 
-    private void downloadVideoDirect() {
+    private void downloadVideoDirect(String coverUrl, String videoUrl, String username, String shortcode) {
         Log.e("asd", "download video direct");
+        String coverFilename = String.format(COVER_FILENAME_TEMPLATE, username, shortcode);
+        String videoFilename = String.format(VIDEO_FILENAME_TEMPLATE, username, shortcode);
+        DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+        Uri parsedImageUri = Uri.parse(coverUrl);
+        Uri parsedVideoUri = Uri.parse(videoUrl);
+
+        DownloadManager.Request coverRequest = new DownloadManager.Request(parsedImageUri);
+        coverRequest.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        coverRequest.allowScanningByMediaScanner();
+        coverRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, coverFilename);
+
+        dm.enqueue(coverRequest);
+
+        DownloadManager.Request videoRequest = new DownloadManager.Request(parsedVideoUri);
+        videoRequest.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        videoRequest.allowScanningByMediaScanner();
+        videoRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, videoFilename);
+
+        dm.enqueue(videoRequest);
     }
 
 
