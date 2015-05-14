@@ -14,7 +14,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -170,7 +169,7 @@ public class UrlFragment extends Fragment implements View.OnClickListener {
                 makeToast("URL field empty!");
             } else {
                 String urlString = urlField.getText().toString().trim();
-                DownloaderService.startUrlDownload(getActivity(), urlString);
+                DownloaderService.startShareUrlDownload(getActivity(), urlString);
                 showDownloadingAlert();
             }
         } else {

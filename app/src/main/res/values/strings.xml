@@ -16,5 +16,6 @@
         \n5. Tap the Download button to download the chosen media.
         \n\nNote: The Share URL can only be gotten from public profiles. For private profiles, use the Search function in the Search tab.
     </string>
+    <string name="title_activity_profile_page">ProfilePage</string>
 
 </resources>

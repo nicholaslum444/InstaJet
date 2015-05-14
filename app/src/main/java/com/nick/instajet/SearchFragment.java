@@ -2,6 +2,7 @@ package com.nick.instajet;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -103,6 +105,14 @@ public class SearchFragment extends Fragment implements InstagramApiHandlerTaskL
                     return true;
                 }
                 return false;
+            }
+        });
+
+        ListView listViewSearchResults = (ListView) v.findViewById(R.id.ListViewSearchResults);
+        listViewSearchResults.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                onClickSearchResultItem(parent, view, position, id);
             }
         });
 
@@ -202,6 +212,16 @@ public class SearchFragment extends Fragment implements InstagramApiHandlerTaskL
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    public void onClickSearchResultItem(AdapterView<?> profileList, View view, int position, long id) {
+        JSONObject profieData = (JSONObject) profileList.getItemAtPosition(position);
+        //makeToast(profieData.toString());
+
+        // open the profile page activity
+        Intent intent = new Intent(getActivity(), ProfilePage.class);
+        intent.putExtra("profileDataString", profieData.toString());
+        startActivity(intent);
     }
 
 

@@ -15,6 +15,7 @@ import java.util.HashMap;
  */
 public class ProfilePicLoaderTask extends AsyncTask<Void, Void, Bitmap> {
 
+    private boolean hasCache;
     private ImageView imageViewProfilePic;
     private String profilePicUrl;
     private HashMap<String, Bitmap> profilePicCache;
@@ -23,6 +24,14 @@ public class ProfilePicLoaderTask extends AsyncTask<Void, Void, Bitmap> {
         this.imageViewProfilePic = imageViewProfilePic;
         this.profilePicUrl = profilePicUrl;
         this.profilePicCache = profilePicCache;
+        this.hasCache = true;
+    }
+
+    public ProfilePicLoaderTask(ImageView imageViewProfilePic, String profilePicUrl) {
+        this.imageViewProfilePic = imageViewProfilePic;
+        this.profilePicUrl = profilePicUrl;
+        this.profilePicCache = null;
+        this.hasCache = false;
     }
 
     @Override
@@ -40,7 +49,9 @@ public class ProfilePicLoaderTask extends AsyncTask<Void, Void, Bitmap> {
 
     @Override
     protected void onPostExecute(Bitmap profilePicBmp) {
-        profilePicCache.put(profilePicUrl, profilePicBmp);
+        if (hasCache) {
+            profilePicCache.put(profilePicUrl, profilePicBmp);
+        }
         imageViewProfilePic.setImageBitmap(profilePicBmp);
     }
 }
