@@ -40,7 +40,7 @@
             <ListView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/ListViewPictureList"
+                android:id="@+id/ListViewPhotoStream"
                 android:isScrollContainer="false">
 
             </ListView>

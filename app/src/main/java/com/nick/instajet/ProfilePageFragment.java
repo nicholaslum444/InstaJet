@@ -7,7 +7,6 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -227,7 +226,7 @@ public class ProfilePageFragment extends Fragment implements View.OnClickListene
         textViewFullname.setText(fullname);
 
         ImageView imageViewProfilePic = (ImageView) v.findViewById(R.id.ImageViewProfilePic);
-        new ProfilePicLoaderTask(imageViewProfilePic, profilePicUrl).execute();
+        new ImageViewLoaderTask(imageViewProfilePic, profilePicUrl).execute();
 
         imageViewProfilePic.setOnClickListener(this);
     }

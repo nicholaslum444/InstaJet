@@ -20,41 +20,37 @@ import java.util.HashMap;
 public class SearchResultsListAdapter extends BaseAdapter implements ListAdapter {
 
     private final Activity caller;
-    private final JSONArray results;
+    private final JSONArray resultsList;
 
     private HashMap<String, Bitmap> profilePicCache;
 
-    SearchResultsListAdapter(Activity caller, JSONArray results) {
+    SearchResultsListAdapter(Activity caller, JSONArray resultsList) {
         super();
-        this.results = results;
+        this.resultsList = resultsList;
         this.caller = caller;
         this.profilePicCache = new HashMap<>();
     }
 
     @Override
     public int getCount() {
-        return results.length();
+        return resultsList.length();
     }
 
     @Override
     public Object getItem(int position) {
-        return results.opt(position);
+        return resultsList.opt(position);
     }
 
     @Override
     public long getItemId(int position) {
-        JSONObject user = results.optJSONObject(position);
+        JSONObject user = resultsList.optJSONObject(position);
         return user.optLong("id");
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-//        View view = convertView; // re-use an existing view, if one is available
-//        if (view == null) {
-//            view = caller.getLayoutInflater().inflate(R.layout.listitem_search_result, null);
-//        }
         View view = caller.getLayoutInflater().inflate(R.layout.listitem_search_result, null);
-        JSONObject user = results.optJSONObject(position);
+        JSONObject user = resultsList.optJSONObject(position);
         setupResultRow(view, user);
         return view;
     }
@@ -78,7 +74,7 @@ public class SearchResultsListAdapter extends BaseAdapter implements ListAdapter
         if (profilePicCache.containsKey(profilePicUrl)) {
             imageViewProfilePic.setImageBitmap(profilePicCache.get(profilePicUrl));
         } else {
-            new ProfilePicLoaderTask(imageViewProfilePic, profilePicUrl, profilePicCache).execute();
+            new ImageViewLoaderTask(imageViewProfilePic, profilePicUrl, profilePicCache).execute();
         }
     }
 }

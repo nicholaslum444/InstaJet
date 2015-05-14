@@ -11,11 +11,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.List;
 
 
 /**
@@ -38,6 +42,8 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
     private String accessToken;
 
     private String nextUrl;
+    private JSONArray mediaList;
+    private PhotoStreamListAdapter mediaListAdapter;
 
     private OnFragmentInteractionListener mListener;
 
@@ -78,6 +84,7 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
             streamType = getArguments().getString(ARG_STREAM_TYPE);
         }
         accessToken = getActivity().getSharedPreferences("InstaJetPrefs", Context.MODE_PRIVATE).getString("accessToken", "notoken");
+        mediaList = new JSONArray();
     }
 
     @Override
@@ -139,7 +146,7 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
         if (nextUrl == null) {
             return;
         }
-        
+
         setProgressBarVisibility(View.VISIBLE);
         setLoadMoreButtonVisibility(View.GONE);
 
@@ -185,9 +192,23 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
                 nextUrl = null;
             } else {
                 nextUrl = pagination.getString("next_url");
+                setLoadMoreButtonVisibility(View.VISIBLE);
             }
 
-            // settle the listadapter
+            // update the main medialist
+            JSONArray mediaListUpdates = response.getJSONArray("data");
+            for (int i = 0; i < mediaListUpdates.length(); i++) {
+                mediaList.put(mediaListUpdates.getJSONObject(i));
+            }
+
+            // set the adapter if none, else call update on it
+            if (mediaListAdapter == null) {
+                mediaListAdapter = new PhotoStreamListAdapter(getActivity(), mediaList);
+                ListView listViewPhotoStream = (ListView) getView().findViewById(R.id.ListViewPhotoStream);
+                listViewPhotoStream.setAdapter(mediaListAdapter);
+            } else {
+                mediaListAdapter.notifyDataSetChanged();
+            }
 
         } catch (JSONException e) {
             e.printStackTrace();

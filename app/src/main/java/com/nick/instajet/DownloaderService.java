@@ -244,7 +244,7 @@ public class DownloaderService
         }
     }
 
-    private int getDataType(JSONObject o) {
+    public static int getDataType(JSONObject o) {
         try {
             JSONObject data = o.getJSONObject("data");
             String type = data.getString("type");
