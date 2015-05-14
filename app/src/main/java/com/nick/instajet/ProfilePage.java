@@ -16,7 +16,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
-public class ProfilePage extends Activity implements ProfilePageFragment.OnFragmentInteractionListener {
+public class ProfilePage extends Activity implements ProfilePageFragment.OnFragmentInteractionListener, PhotoStreamFragment.OnFragmentInteractionListener {
 
     private static final String PROFILE_PAGE_FRAG_TAG = "profilePageFragTag";
     private FragmentManager fm = getFragmentManager();

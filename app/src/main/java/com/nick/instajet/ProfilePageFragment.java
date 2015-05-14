@@ -3,6 +3,8 @@ package com.nick.instajet;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.drawable.Drawable;
@@ -49,6 +51,9 @@ public class ProfilePageFragment extends Fragment implements View.OnClickListene
 
     private OnFragmentInteractionListener mListener;
 
+    private static final String PHOTO_STREAM_FRAG_TAG = "photoStreamFragTag";
+    private FragmentManager fm;
+
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
@@ -88,8 +93,11 @@ public class ProfilePageFragment extends Fragment implements View.OnClickListene
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_profile_page, container, false);
 
+        fm = getActivity().getFragmentManager();
+
         setupProfileDetails(v, profileData);
         setupRelationshipDetails(v, profileData);
+        setupPhotoStream(v, profileData);
 
         return v;
     }
@@ -165,7 +173,7 @@ public class ProfilePageFragment extends Fragment implements View.OnClickListene
                 textViewRelationshipIncoming.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.presence_online, 0, 0, 0);
             } else {
                 textViewRelationshipIncoming.setText("Not following you");
-                textViewRelationshipIncoming.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.presence_offline,0, 0, 0);
+                textViewRelationshipIncoming.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.presence_offline, 0, 0, 0);
             }
 
             if (outgoingStatus.equals("follows")) {
@@ -224,15 +232,20 @@ public class ProfilePageFragment extends Fragment implements View.OnClickListene
         imageViewProfilePic.setOnClickListener(this);
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.ImageViewProfilePic :
-                onClickProfilePic(v);
-                break;
+    private void setupPhotoStream(View v, JSONObject profileData) {
 
-            default :
-                makeToast(v.getId() + " Button not registered");
+        try {
+            String userId = profileData.getString("id");
+            // launch the fragment with the profiledata
+            FragmentTransaction ft = fm.beginTransaction();
+            Fragment photoStreamFrag = PhotoStreamFragment.newInstance(userId, PhotoStreamFragment.STREAM_TYPE_USER);
+            ft.replace(R.id.LayoutPhotoStreamFragment, photoStreamFrag, PHOTO_STREAM_FRAG_TAG);
+            ft.commit();
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Log.e("asd", "cannot get id from profiledata");
+            makeToast("Something went wrong. The page may not load correctly.");
         }
     }
 
@@ -267,6 +280,18 @@ public class ProfilePageFragment extends Fragment implements View.OnClickListene
     @Override
     public void receiveApiResponse(JSONObject j) {
         continueSetupRelationshipDetails(j);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.ImageViewProfilePic :
+                onClickProfilePic(v);
+                break;
+
+            default :
+                makeToast(v.getId() + " Button not registered");
+        }
     }
 
     /**

@@ -9,14 +9,6 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <ProgressBar
-            style="?android:attr/progressBarStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone"
-            android:id="@+id/ProgressBarLoadProgress"/>
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -27,12 +19,16 @@
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@android:drawable/ic_lock_lock"
                 android:id="@+id/ImageViewRestrictedWarning"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/TextViewRestrictedWarning"/>
+                android:layout_gravity="center"
+                android:id="@+id/TextViewRestrictedWarning"
+                android:text="No permission to view these photos"/>
 
         </LinearLayout>
 
@@ -48,6 +44,19 @@
                 android:isScrollContainer="false">
 
             </ListView>
+
+            <ProgressBar
+                style="?android:attr/progressBarStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:id="@+id/ProgressBarLoadProgress"/>
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/ButtonPhotoStreamLoadMore"
+                android:text="Load more"/>
 
         </LinearLayout>
 

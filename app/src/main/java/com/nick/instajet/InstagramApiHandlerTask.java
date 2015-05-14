@@ -33,6 +33,7 @@ public class InstagramApiHandlerTask extends AsyncTask<String, Void, JSONObject>
 			// check the response code
 			int responseCode = connection.getResponseCode();
 			if (responseCode == 200) {
+				Log.e("ApiHandler", "Code: " + responseCode);
 				// connection success
 				
 				// build json string
@@ -50,6 +51,22 @@ public class InstagramApiHandlerTask extends AsyncTask<String, Void, JSONObject>
 				JSONObject j = new JSONObject(responseContent);
 				return j;
 				
+			} else if (responseCode == 400) {
+					Log.e("ApiHandler", "Error code: " + responseCode);
+					// build json string
+					BufferedReader br = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+					StringBuilder sb = new StringBuilder();
+					String line = br.readLine();
+					while (line != null) {
+						sb.append(line);
+						line = br.readLine();
+					}
+					br.close();
+					String responseContent = sb.toString();
+
+					// create json object and return it
+					JSONObject j = new JSONObject(responseContent);
+					return j;
 			} else {
 				// connection error, return null
 				return null;
