@@ -14,46 +14,105 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_margin="@dimen/activity_horizontal_margin"
+            android:orientation="vertical">
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/ImageViewProfilePic"/>
-
-            <!--profile details-->
             <LinearLayout
-                android:layout_width="0px"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_marginBottom="5dp"
+                android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/TextViewUsername"
-                    android:text="username"/>
+                <ImageView
+                android:layout_width="150px"
+                android:layout_height="150px"
+                android:background="#ddd"
+                android:id="@+id/ImageViewProfilePic"
+                android:clickable="true"
+                android:layout_gravity="center_horizontal"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <!--profile details-->
+                <LinearLayout
+                    android:layout_width="0px"
                     android:layout_height="wrap_content"
-                    android:id="@+id/TextViewFullname"
-                    android:text="Full Name"/>
+                    android:layout_weight="1"
+                    android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                    android:orientation="vertical">
+
+                    <!--dont show the username part since its on the actionbar alr-->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        style="@android:style/TextAppearance.DeviceDefault.Large"
+                        android:id="@+id/TextViewUsername"
+                        android:visibility="gone"
+                        android:text="username"/>
+                    <!--remove username from view-->
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:id="@+id/LayoutRelationshipDetails">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@android:style/TextAppearance.DeviceDefault.Medium"
+                            android:id="@+id/TextViewRelationshipInvalid"
+                            android:drawableLeft="@android:drawable/presence_online"
+                            android:drawablePadding="5dp"
+                            android:visibility="gone"
+                            android:text="You"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@android:style/TextAppearance.DeviceDefault.Medium"
+                            android:id="@+id/TextViewRelationshipIncoming"
+                            android:drawableLeft="@android:drawable/presence_online"
+                            android:drawablePadding="5dp"
+                            android:text="Following you"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@android:style/TextAppearance.DeviceDefault.Medium"
+                            android:id="@+id/TextViewRelationshipOutgoing"
+                            android:drawableLeft="@android:drawable/presence_online"
+                            android:drawablePadding="5dp"
+                            android:text="You don't follow"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@android:style/TextAppearance.DeviceDefault.Medium"
+                            android:id="@+id/TextViewRelationshipPrivate"
+                            android:drawableLeft="@android:drawable/presence_online"
+                            android:drawablePadding="5dp"
+                            android:text="Private Profile"/>
+
+                    </LinearLayout>
+
+                </LinearLayout>
 
             </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@android:style/TextAppearance.DeviceDefault.Small"
+                android:id="@+id/TextViewFullname"
+                android:text="Full Name"/>
 
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:id="@+id/LayoutPhotoStreamFragment">
 
-            <ListView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/ListViewPictureList">
-
-            </ListView>
 
         </LinearLayout>
 

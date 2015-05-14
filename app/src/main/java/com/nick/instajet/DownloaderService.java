@@ -31,22 +31,31 @@ public class DownloaderService
 
     // TODO: Rename actions, choose action names that describe tasks that this
     // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
-    private static final String ACTION_URL_DOWNLOAD = "com.nick.instajet.action.url_download";
+    private static final String ACTION_SHARE_URL_DOWNLOAD = "com.nick.instajet.action.share_url_download";
+    private static final String ACTION_PROFILE_PIC_DOWNLOAD = "com.nick.instajet.action.profile_pic_download";
+    private static final String ACTION_DIRECT_MEDIA_DOWNLOAD = "com.nick.instajet.action.direct_media_download";
 
     // TODO: Rename parameters
-    private static final String PARAM_FULL_URL = "com.nick.instajet.extra.full_url";
+    private static final String PARAM_SHARE_URL = "com.nick.instajet.extra.share_url";
+    private static final String PARAM_PROFILE_DATA_STRING = "com.nick.instajet.extra.profile_data_object";
+    private static final String PARAM_MEDIA_DATA_STRING = "com.nick.instajet.extra.direct_media_object";
 
-    private static final String MEDIA_REQUEST_TEMPLATE = "https://api.instagram.com/v1/media/shortcode/%1$s?access_token=%2$s";
+    private static final String MEDIA_API_REQUEST_TEMPLATE = "https://api.instagram.com/v1/media/shortcode/%1$s?access_token=%2$s";
+
+    private static final String PROFILE_PIC_FILENAME_TEMPLATE = "%1$s_profile_pic.jpg";
     private static final String IMAGE_FILENAME_TEMPLATE = "%1$s_%2$s_image.jpg";
     private static final String COVER_FILENAME_TEMPLATE = "%1$s_%2$s_cover.jpg";
     private static final String VIDEO_FILENAME_TEMPLATE = "%1$s_%2$s_video.mp4";
 
-    private static final int DATA_TYPE_IMAGE = 0;
-    private static final int DATA_TYPE_VIDEO = 1;
-    private static final int DATA_TYPE_ERROR = -1;
+    public static final int DATA_TYPE_IMAGE = 0;
+    public static final int DATA_TYPE_VIDEO = 1;
+    public static final int DATA_TYPE_ERROR = -1;
 
-    private String accessToken = "188264189.a3f9fc7.5c81d69e6de642d2a9dfdedfb1d237d8";
-    private String fullUrl = "";
+    private String accessToken = "";//"188264189.a3f9fc7.5c81d69e6de642d2a9dfdedfb1d237d8";
+
+    private String shareUrl = "";
+    private String profileDataString = "";
+    private String mediaDataString = "";
 
     /**
      * Starts this service to perform action URL_DOWNLOAD with the given parameters. If
@@ -55,10 +64,24 @@ public class DownloaderService
      * @see IntentService
      */
     // TODO: Customize helper method
-    public static void startUrlDownload(Context context, String fullUrl) {
+    public static void startShareUrlDownload(Context context, String shareUrl) {
         Intent intent = new Intent(context, DownloaderService.class);
-        intent.setAction(ACTION_URL_DOWNLOAD);
-        intent.putExtra(PARAM_FULL_URL, fullUrl);
+        intent.setAction(ACTION_SHARE_URL_DOWNLOAD);
+        intent.putExtra(PARAM_SHARE_URL, shareUrl);
+        context.startService(intent);
+    }
+
+    public static void startProfilePicDownload(Context context, String profileDataString) {
+        Intent intent = new Intent(context, DownloaderService.class);
+        intent.setAction(ACTION_PROFILE_PIC_DOWNLOAD);
+        intent.putExtra(PARAM_PROFILE_DATA_STRING, profileDataString);
+        context.startService(intent);
+    }
+
+    public static void startDirectMediaDownload(Context context, String mediaDataString) {
+        Intent intent = new Intent(context, DownloaderService.class);
+        intent.setAction(ACTION_DIRECT_MEDIA_DOWNLOAD);
+        intent.putExtra(PARAM_MEDIA_DATA_STRING, mediaDataString);
         context.startService(intent);
     }
 
@@ -70,22 +93,32 @@ public class DownloaderService
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
             final String action = intent.getAction();
-            if (ACTION_URL_DOWNLOAD.equals(action)) {
-                final String fullUrl = intent.getStringExtra(PARAM_FULL_URL);
-                this.fullUrl = fullUrl;
-                handleDownloadUrl(fullUrl);
+            if (ACTION_SHARE_URL_DOWNLOAD.equals(action)) {
+                final String shareUrl = intent.getStringExtra(PARAM_SHARE_URL);
+                this.shareUrl = shareUrl;
+                handleShareUrlDownload(shareUrl);
+
+            } else if (ACTION_PROFILE_PIC_DOWNLOAD.equals(action)) {
+                final String profileDataString = intent.getStringExtra(PARAM_PROFILE_DATA_STRING);
+                this.profileDataString = profileDataString;
+                handleProfilePicDownload(profileDataString);
+
+            } else if (ACTION_DIRECT_MEDIA_DOWNLOAD.equals(action)) {
+                final String mediaDataString = intent.getStringExtra(PARAM_MEDIA_DATA_STRING);
+                this.mediaDataString = mediaDataString;
+                handleDirectMediaDownload(mediaDataString);
             }
         }
     }
 
     @Override
-    public void receiveApiResponse(JSONObject o) {
-        if (o == null) {
-            Log.e("asd", "o is null");
+    public void receiveApiResponse(JSONObject apiResponseObj) {
+        if (apiResponseObj == null) {
+            Log.e("asd", "apiResponseObj is null");
             showServerNoResponseNotif();
         } else {
-            Log.e("asd", o.toString());
-            continueHandleDownload(o);
+            Log.e("asd", apiResponseObj.toString());
+            continueHandleShareUrlDownload(apiResponseObj);
         }
     }
 
@@ -93,26 +126,62 @@ public class DownloaderService
      * Handle action Foo in the provided background thread with the provided
      * parameters.
      */
-    private void handleDownloadUrl(String fullUrl) {
-        Log.e("asd", "handing download url");
-        String shortcode = getShortcode(fullUrl);
-        sendMediaRequest(shortcode);
+    private void handleShareUrlDownload(String shareUrl) {
+        Log.e("asd", "handing share url");
+        String shortcode = getShortcode(shareUrl);
+        sendMediaApiRequest(shortcode);
     }
 
-    private void continueHandleDownload(JSONObject apiResponseObj) {
-        Log.e("asd", "continue handing download");
-        switch (getDataType(apiResponseObj)) {
+    private void continueHandleShareUrlDownload(JSONObject responseObj) {
+        Log.e("asd", "continue handing share download");
+        switch (getDataType(responseObj)) {
             case DATA_TYPE_IMAGE :
-                downloadImgWithShortcode(getImageUrl(apiResponseObj), getShortcode(apiResponseObj), getUsername(apiResponseObj));
+                downloadImgWithShortcode(getImageUrl(responseObj), getShortcode(responseObj), getUsername(responseObj));
                 break;
 
             case DATA_TYPE_VIDEO :
-                downloadVideoWithShortcode(getImageUrl(apiResponseObj), getVideoUrl(apiResponseObj), getShortcode(apiResponseObj), getUsername(apiResponseObj));
+                downloadVideoWithShortcode(getImageUrl(responseObj), getVideoUrl(responseObj), getShortcode(responseObj), getUsername(responseObj));
                 break;
 
             default :
                 Log.e("asd", "not img or video");
                 break;
+        }
+    }
+
+    private void handleProfilePicDownload(String profileDataString) {
+        try {
+            JSONObject profileData = new JSONObject(profileDataString);
+            String profilePicUrl = profileData.getString("profile_picture");
+            String username = profileData.getString("username");
+            downloadImgProfile(profilePicUrl, username);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Log.e("asd", "making json from string failed when doing profile pic");
+        }
+    }
+
+    private void handleDirectMediaDownload(String mediaDataString) {
+        JSONObject mediaData = new JSONObject();
+        try {
+            mediaData = new JSONObject(mediaDataString);
+
+            switch (getDataType(mediaData)) {
+                case DATA_TYPE_IMAGE :
+                    downloadImgDirect();
+                    break;
+
+                case DATA_TYPE_VIDEO :
+                    downloadVideoDirect();
+                    break;
+
+                default :
+                    Log.e("asd", "direct download idk what type");
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Log.e("asd", "making json from string failed");
         }
     }
 
@@ -131,7 +200,7 @@ public class DownloaderService
         return shortcode;
     }
 
-    private void sendMediaRequest(String shortcode) {
+    private void sendMediaApiRequest(String shortcode) {
         accessToken = getSharedPreferences("InstaJetPrefs", MODE_PRIVATE).getString("accessToken", "notoken");
         try {
             accessToken = URLEncoder.encode(accessToken, "UTF-8");
@@ -142,7 +211,7 @@ public class DownloaderService
         }
 
         // construct the api url
-        String apiUrl = String.format(MEDIA_REQUEST_TEMPLATE, shortcode, accessToken);
+        String apiUrl = String.format(MEDIA_API_REQUEST_TEMPLATE, shortcode, accessToken);
 
         // execute the json getter
         InstagramApiHandlerTask dataGetter = new InstagramApiHandlerTask(this);
@@ -265,6 +334,35 @@ public class DownloaderService
         dm.enqueue(videoRequest);
     }
 
+    private void downloadImgProfile(String profilePicUrl, String username) {
+        Log.e("asd", "handing download profile pic " + profilePicUrl);
+        String filename = String.format(PROFILE_PIC_FILENAME_TEMPLATE, username);
+        DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+        Uri parsedImageUri = Uri.parse(profilePicUrl);
+
+        DownloadManager.Request imageRequest = new DownloadManager.Request(parsedImageUri);
+        imageRequest.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        imageRequest.allowScanningByMediaScanner();
+        imageRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename);
+
+        dm.enqueue(imageRequest);
+    }
+
+    private void downloadImgDirect() {
+        Log.e("asd", "download image direct");
+    }
+
+    private void downloadVideoDirect() {
+        Log.e("asd", "download video direct");
+    }
+
+
+
+
+
+
+
+
     private void showServerNoResponseNotif() {
         NotificationCompat.Builder n = new NotificationCompat.Builder(this);
         n.setSmallIcon(R.drawable.ic_launcher);
@@ -286,6 +384,6 @@ public class DownloaderService
         n.setStyle(nbig);
 
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        nm.notify(this.fullUrl.hashCode(), n.build());
+        nm.notify(this.shareUrl.hashCode(), n.build());
     }
 }

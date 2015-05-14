@@ -18,8 +18,8 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".Home"
-            android:launchMode="singleTop"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -32,6 +32,11 @@
             android:name=".DownloaderService"
             android:exported="false" >
         </service>
+
+        <activity
+            android:name=".ProfilePage"
+            android:label="@string/title_activity_profile_page" >
+        </activity>
     </application>
 
 </manifest>
