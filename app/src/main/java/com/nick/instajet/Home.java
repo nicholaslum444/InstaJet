@@ -11,13 +11,17 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.HashMap;
 
 public class Home
 		extends Activity
 		implements UrlFragment.OnFragmentInteractionListener,
 			SearchFragment.OnFragmentInteractionListener,
-			SettingsFragment.OnFragmentInteractionListener {
+			SettingsFragment.OnFragmentInteractionListener,
+			ProfilePageFragment.OnFragmentInteractionListener, PhotoStreamFragment.OnFragmentInteractionListener {
 
 	private FragmentManager fm = getFragmentManager();
 	private HashMap<String, Fragment> fragmentCache = new HashMap<>();
@@ -44,8 +48,10 @@ public class Home
 		boolean isLoggedIn = getSharedPreferences("InstaJetPrefs", MODE_PRIVATE).getBoolean("isLoggedIn", false);
 
 		if (isLoggedIn) {
-			// go to url download by default
-			onClickButtonSearch(null);
+			// go to search page by default
+			// TODO let user choose where to go?
+			showDefaultPage();
+
 		} else {
 			// show login page
 			Intent intent = new Intent(this, Login.class);
@@ -77,6 +83,7 @@ public class Home
 	}
 
 	@Override
+	// override the backpress with doublepress
 	public void onBackPressed() {
 		if (backPressedToast != null) {
 			backPressedToast.cancel();
@@ -98,23 +105,31 @@ public class Home
 
 
 	public void onClickButtonUrl(View v) {
-		FragmentTransaction ft = fm.beginTransaction();
 		UrlFragment urlFrag = (UrlFragment) getFrag(URL_FRAG_TAG);
-		ft.replace(R.id.LayoutFragment, urlFrag, URL_FRAG_TAG);
-		ft.commit();
+		loadFragment(urlFrag, URL_FRAG_TAG);
 	}
 
 	public void onClickButtonSearch(View v) {
-		FragmentTransaction ft = fm.beginTransaction();
 		SearchFragment searchFrag = (SearchFragment) getFrag(SEARCH_FRAG_TAG);
-		ft.replace(R.id.LayoutFragment, searchFrag, SEARCH_FRAG_TAG);
-		ft.commit();
+		loadFragment(searchFrag, SEARCH_FRAG_TAG);
+	}
+
+	public void onClickButtonSelf(View v) {
+		ProfilePageFragment selfFrag = (ProfilePageFragment) getFrag(SELF_FRAG_TAG);
+		loadFragment(selfFrag, SELF_FRAG_TAG);
 	}
 
 	public void onClickButtonSettings(View v) {
-		FragmentTransaction ft = fm.beginTransaction();
 		SettingsFragment settingsFrag = (SettingsFragment) getFrag(SETTINGS_FRAG_TAG);
-		ft.replace(R.id.LayoutFragment, settingsFrag, SETTINGS_FRAG_TAG);
+		loadFragment(settingsFrag, SETTINGS_FRAG_TAG);
+	}
+
+
+
+
+	private void loadFragment(Fragment frag, String fragTag) {
+		FragmentTransaction ft = fm.beginTransaction();
+		ft.replace(R.id.LayoutFragment, frag, fragTag);
 		ft.commit();
 	}
 
@@ -132,6 +147,18 @@ public class Home
 					frag = SearchFragment.newInstance("asd", "asd");
 					break;
 
+				case SELF_FRAG_TAG :
+					String selfDataString = getSharedPreferences("InstaJetPrefs", MODE_PRIVATE).getString("selfDataString", "");
+					JSONObject selfData = null;
+					try {
+						selfData = new JSONObject(selfDataString);
+					} catch (JSONException e) {
+						e.printStackTrace();
+						Log.e("asd", "making self data obj failed");
+					}
+					frag = ProfilePageFragment.newInstance(selfData);
+					break;
+
 				case SETTINGS_FRAG_TAG :
 					frag = SettingsFragment.newInstance("asd", "asd");
 					break;
@@ -144,6 +171,10 @@ public class Home
 			fragmentCache.put(fragTag, frag);
 			return frag;
 		}
+	}
+
+	private void showDefaultPage() {
+		onClickButtonSearch(null);
 	}
 
 }

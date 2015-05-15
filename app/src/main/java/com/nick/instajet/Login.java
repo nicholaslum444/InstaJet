@@ -20,11 +20,12 @@ import org.json.JSONObject;
  */
 public class Login extends Activity implements InstagramApiHandlerTaskListener {
 
-	SharedPreferences sharedPrefs;
+    SharedPreferences sharedPrefs;
 	SharedPreferences.Editor sharedPrefsEditor;
     Context context = this;
 
-    private static final String USER_INFO_REQUEST_TEMPLATE = "https://api.instagram.com/v1/users/self/?access_token=%1$s";
+    public static final String LOGIN_URL = "https://instagram.com/oauth/authorize/?client_id=a3f9fc7b2b4e43b99228418f4363cbec&redirect_uri=http://nicholaslum444.github.io/instajet-callback.html&response_type=token";
+    private static final String USER_INFO_REQUEST_TEMPLATE = "https://api.instagram.com/v1/users/%1$s/?access_token=%2$s";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -61,12 +62,12 @@ public class Login extends Activity implements InstagramApiHandlerTaskListener {
             }
         });
         webview.getSettings().setJavaScriptEnabled(true);
-        webview.loadUrl("https://instagram.com/oauth/authorize/?client_id=a3f9fc7b2b4e43b99228418f4363cbec&redirect_uri=http://nicholaslum444.github.io/instajet-callback.html&response_type=token");
+        webview.loadUrl(LOGIN_URL);
     }
 
     private void sendUserInfoRequest() {
         String accessToken = getSharedPreferences("InstaJetPrefs", MODE_PRIVATE).getString("accessToken", "notoken");
-        String apiUrl = String.format(USER_INFO_REQUEST_TEMPLATE, accessToken);
+        String apiUrl = String.format(USER_INFO_REQUEST_TEMPLATE, "self", accessToken);
         InstagramApiHandlerTask dataGetter = new InstagramApiHandlerTask(this);
         dataGetter.execute(apiUrl);
         Log.e("asd", "info request sent");
@@ -91,6 +92,7 @@ public class Login extends Activity implements InstagramApiHandlerTaskListener {
             spe.putString("profilePictureUrl", profilePictureUrl);
             spe.putString("userId", userId);
             spe.putString("fullname", fullname);
+            spe.putString("selfDataString", data.toString());
 
             spe.apply();
 
