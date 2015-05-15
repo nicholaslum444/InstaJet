@@ -1,320 +1,222 @@
 package com.nick.instajet;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.DownloadManager;
-import android.app.DownloadManager.Request;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.webkit.CookieManager;
-import android.widget.EditText;
-import android.widget.Toast;
+import java.util.HashMap;
 
-import java.util.Arrays;
-import java.util.prefs.Preferences;
+public class Home
+		extends Activity
+		implements UrlFragment.OnFragmentInteractionListener,
+			SearchFragment.OnFragmentInteractionListener,
+			SettingsFragment.OnFragmentInteractionListener,
+			ProfilePageFragment.OnFragmentInteractionListener, PhotoStreamFragment.OnFragmentInteractionListener {
 
-public class Home extends Activity implements ResponseGetterTaskListener {
-	
-	// TODO set this to the user's own via authing
-	String accessToken = "188264189.1fb234f.1cab308d94f24fabbc9dba5895a417ca";
-	
-	// TODO send this to the Strings xml
-	String apiUrlTemplate = "https://api.instagram.com/v1/media/shortcode/%1$s"
-			+ "?access_token=%2$s";
-	
-	JSONObject responseObject;
-	
-	long imageDownloadId;
-	long videoDownloadId;
+	private FragmentManager fm = getFragmentManager();
+	private HashMap<String, Fragment> fragmentCache = new HashMap<>();
 
-    SharedPreferences sharedPrefs;
-	
-	String shortcode;
-	
-	/**
-	 * This method is called when the Download button is pressed
-	 * 
-	 * @param v the Button that was pressed
-	 */
-	public void startDownloadProcess(View v) {
-		// get the user typed url string
-		EditText urlField = (EditText) findViewById(R.id.EditTextUrlField);
-		String urlString = urlField.getText().toString();
+	private static final long BACK_PRESS_DELAY_MILS = 2000;
+	private long backPressedTimePrevious = 0;
+	private Toast backPressedToast;
 
-		// to remove the final "/" to prevent confusion during split
-		while (urlString.endsWith("/")) {
-			urlString = urlString.substring(0, urlString.length() - 1);
-		}
-		
-		// get the short code, which is the last item in the split array 
-		String[] urlStringSplit = urlString.split("/");
-		shortcode = urlStringSplit[urlStringSplit.length - 1];
-
-		// retrieve the accessToken everytime we try to download
-		accessToken = sharedPrefs.getString("accessToken", null);
-		if (accessToken == null) {
-			checkLogin();
-		}
-
-		// construct the api url
-		String apiUrl = String.format(apiUrlTemplate, shortcode, accessToken);
-		
-		// execute the json getter
-		ResponseGetterTask dataGetter = new ResponseGetterTask(this);
-		dataGetter.execute(apiUrl);
-		
-		// pause download process while waiting for the response
-	}
-	
-	@Override
-	public void updateResponseObject(JSONObject j) {
-		if (j == null) {
-			throwAlert("Empty response from server. Check URL.");
-		} else {
-			try {
-				responseObject = new JSONObject(j.toString());
-				continueDownloadProcess();
-
-			} catch (JSONException e) {
-				// making the new json object got problem.
-				throwAlert(e.toString());
-			}
-		}
-	}
-
-	private void continueDownloadProcess() {
-		boolean isOk = checkFor200();
-		if (isOk) {
-			String type = determineDataType();
-			executeBasedOnType(type);
-			
-		} else {
-			// TODO received object not ok
-			throwAlert("Status Error: ");
-		}
-	}
-
-	private void executeBasedOnType(String type) {
-		DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-		
-		// TODO extract the mess inside the ifelse to another method
-		if (type.equals("image")) {
-			try {
-				// TODO extract magic strings
-				JSONObject data = responseObject.getJSONObject("data");
-				JSONObject images = data.getJSONObject("images");
-				JSONObject stdResImage = images.getJSONObject("standard_resolution");
-				String imageUrl = stdResImage.getString("url");
-				/* debug */Log.w("home", imageUrl);
-				Uri parsedImageUri = Uri.parse(imageUrl);
-				Request imageRequest = new Request(parsedImageUri);
-				imageRequest.setNotificationVisibility(Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-				imageRequest.allowScanningByMediaScanner();
-				imageRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, shortcode + "_image.jpg");
-				/* debug */Log.w("home", parsedImageUri.toString());
-				imageDownloadId = dm.enqueue(imageRequest);
-
-				JSONObject picUser = data.getJSONObject("user");
-				String picUsername = picUser.getString("username");
-				throwAlert("This picture is by " + picUsername);
-				
-			} catch (JSONException e) {
-				throwAlert(e.toString());
-			} catch (Exception ex) {
-				throwAlert("Not JSON exception. " + ex.toString());
-			}
-			
-		} else if (type.equals("video")) {
-			try {
-				// TODO extract magic strings
-				JSONObject data = responseObject.getJSONObject("data");
-				// we will download both the video and the cover pic
-
-				// get the cover pic first
-				JSONObject images = data.getJSONObject("images");
-				JSONObject stdResImage = images.getJSONObject("standard_resolution");
-				String imageUrl = stdResImage.getString("url");
-				/* debug */Log.w("home", imageUrl);
-				Uri parsedImageUri = Uri.parse(imageUrl);
-				Request imageRequest = new Request(parsedImageUri);
-				imageRequest.setNotificationVisibility(Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-				imageRequest.allowScanningByMediaScanner();
-				imageRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, shortcode+"_cover.jpg");
-				/* debug */Log.w("home", parsedImageUri.toString());
-				imageDownloadId = dm.enqueue(imageRequest);
-				
-				// then get the video itself
-				JSONObject videos = data.getJSONObject("videos");
-				JSONObject stdResVideo = videos.getJSONObject("standard_resolution");
-				String videoUrl = stdResVideo.getString("url");
-				/* debug */Log.w("home", videoUrl);
-				Uri parsedVideoUri = Uri.parse(videoUrl);
-				Request videoRequest = new Request(parsedVideoUri);
-				videoRequest.setNotificationVisibility(Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-				videoRequest.allowScanningByMediaScanner();
-				videoRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, shortcode+"_video.mp4");
-				/* debug */Log.w("home", parsedVideoUri.toString());
-				videoDownloadId = dm.enqueue(videoRequest);
-
-				JSONObject picUser = data.getJSONObject("user");
-				String picUsername = picUser.getString("username");
-				throwAlert("This video is by " + picUsername);
-				
-				
-			} catch (JSONException e) {
-				throwAlert(e.toString());
-			}
-			
-		} else {
-			// TODO throw error for weird type
-			throwAlert("Unknown Content Type");
-			return;
-		}
-	}
-	
-	private boolean checkFor200() {
-		try {
-			JSONObject data = responseObject.getJSONObject("meta");
-			int type = data.getInt("code");
-			return type == 200;
-			
-		} catch (JSONException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-
-	private int getStatusCode() {
-		try {
-			JSONObject data = responseObject.getJSONObject("meta");
-			int type = data.getInt("code");
-			return type;
-
-		} catch (JSONException e) {
-			throwAlert(e.toString());
-			return -1;
-		}
-	}
-	
-	private String determineDataType() {
-		try {
-			JSONObject data = responseObject.getJSONObject("data");
-			String type = data.getString("type");
-			return type;
-			
-		} catch (JSONException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	public void testing(View v) {
-		EditText urlField = (EditText) findViewById(R.id.EditTextUrlField);
-		urlField.setText("http://instagram.com/p/wYN2jBmoVQ/");
-	}
-	
-	public void testing2(View v) {
-		EditText urlField = (EditText) findViewById(R.id.EditTextUrlField);
-		urlField.setText("http://instagram.com/p/wNjVZvmoZx/");
-	}
-
-	public void logout(View v) {
-		// 1. Instantiate an AlertDialog.Builder with its constructor
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-		// 2. Chain together various setter methods to set the dialog characteristics
-		builder.setMessage("Are you sure you want to log out?");
-		builder.setTitle("Logout and Exit");
-		builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				logoutActual();
-			}
-		});
-		builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				// do nothing
-			}
-		});
-		builder.show();
-	}
-
-	public void logoutActual() {
-		sharedPrefs.edit().clear().apply();
-		finish();
-	}
-	
-	/* THROW ALERT FOR ERROR */
-	public void throwAlert() {
-		throwAlert("A serious error has occured. Please try again.");
-	}
-	public void throwAlert(String message) {
-		// 1. Instantiate an AlertDialog.Builder with its constructor
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-		// 2. Chain together various setter methods to set the dialog characteristics
-		builder.setMessage(message);
-		builder.setTitle("Oh No!");
-		builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				// do nothing
-			}
-		});
-		builder.show();
-	}
-	
-	
-	
+	private static final String URL_FRAG_TAG = "urlFragTag";
+	private static final String SEARCH_FRAG_TAG = "searchFragTag";
+	private static final String SELF_FRAG_TAG = "selfFragTag";
+	private static final String SETTINGS_FRAG_TAG = "settingsFragTag";
 	
 	/** ON CREATE */
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		Log.e("asd", "inside oncreate");
+		if (savedInstanceState != null) {
+			Log.e("asd", savedInstanceState.toString());
+		}
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_home);
-		
-		// TODO if not logged in, then open popup to login
-		sharedPrefs = getSharedPreferences("InstaJetPrefs", MODE_PRIVATE);
-		checkLogin();
-	}
 
-	private void checkLogin() {
-		boolean isLoggedIn = sharedPrefs.getBoolean("isLoggedIn", false);
-		if (!isLoggedIn) {
-			openLoginPage();
+		boolean isLoggedIn = getSharedPreferences("InstaJetPrefs", MODE_PRIVATE).getBoolean("isLoggedIn", false);
+
+		if (isLoggedIn) {
+
+			if (isUpToDate()) {
+				// TODO let user choose where to go?
+				showDefaultPage();
+			} else {
+				// prompt relogin if not up to date.
+				showRestartAppDialog();
+			}
+
+		} else {
+			// show login page
+			Intent intent = new Intent(this, Login.class);
+			startActivity(intent);
+			finish();
 		}
 	}
 
-	private void openLoginPage() {
-		Intent intent = new Intent(this, Login.class);
-		startActivity(intent);
+	@Override
+	protected void onNewIntent(Intent intent) {
+		//super.onNewIntent(intent);
+		Log.e("asd", "newintent called");
 	}
 
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.home, menu);
-		return true;
+	protected void onDestroy() {
+		Log.e("asd", "destroying");
+		super.onDestroy();
 	}
 
 	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
+	public void onFragmentInteraction(Uri uri) {
+		// required method for OnFragmentInteractionListener interface
+	}
+
+	@Override
+	public void onFragmentInteraction(String uri) {
+		// required method for OnFragmentInteractionListener interface
+	}
+
+	@Override
+	// override the backpress with doublepress
+	public void onBackPressed() {
+		if (backPressedToast != null) {
+			backPressedToast.cancel();
 		}
-		return super.onOptionsItemSelected(item);
+
+		long backPressedTimeNow =  System.currentTimeMillis();
+
+		if (backPressedTimeNow < (backPressedTimePrevious + BACK_PRESS_DELAY_MILS)) {
+			// carry on exiting
+			super.onBackPressed();
+		} else {
+			// wait for second press
+			backPressedTimePrevious = backPressedTimeNow;
+			backPressedToast = Toast.makeText(this, "Press BACK again to exit", Toast.LENGTH_SHORT);
+			backPressedToast.show();
+		}
 	}
+
+
+
+	public void onClickButtonUrl(View v) {
+		UrlFragment urlFrag = (UrlFragment) getFrag(URL_FRAG_TAG);
+		loadFragment(urlFrag, URL_FRAG_TAG);
+	}
+
+	public void onClickButtonSearch(View v) {
+		SearchFragment searchFrag = (SearchFragment) getFrag(SEARCH_FRAG_TAG);
+		loadFragment(searchFrag, SEARCH_FRAG_TAG);
+	}
+
+	public void onClickButtonSelf(View v) {
+		ProfilePageFragment selfFrag = (ProfilePageFragment) getFrag(SELF_FRAG_TAG);
+		loadFragment(selfFrag, SELF_FRAG_TAG);
+	}
+
+	public void onClickButtonSettings(View v) {
+		SettingsFragment settingsFrag = (SettingsFragment) getFrag(SETTINGS_FRAG_TAG);
+		loadFragment(settingsFrag, SETTINGS_FRAG_TAG);
+	}
+
+
+
+
+	private void loadFragment(Fragment frag, String fragTag) {
+		// if currently loaded frag is same, dont do anything.
+		Fragment f = fm.findFragmentByTag(fragTag);
+		if (f == null || !f.isVisible()) {
+			FragmentTransaction ft = fm.beginTransaction();
+			ft.replace(R.id.LayoutFragment, frag, fragTag);
+			ft.commit();
+		}
+	}
+
+	private Fragment getFrag(String fragTag) {
+		if (fragmentCache.containsKey(fragTag)) {
+			return fragmentCache.get(fragTag);
+		} else {
+			Fragment frag;
+			switch (fragTag) {
+				case URL_FRAG_TAG :
+					frag = UrlFragment.newInstance("asd", "asd");
+					break;
+
+				case SEARCH_FRAG_TAG :
+					frag = SearchFragment.newInstance("asd", "asd");
+					break;
+
+				case SELF_FRAG_TAG :
+					String selfDataString = getSharedPreferences("InstaJetPrefs", MODE_PRIVATE).getString("selfDataString", "");
+					JSONObject selfData = null;
+					try {
+						selfData = new JSONObject(selfDataString);
+					} catch (JSONException e) {
+						e.printStackTrace();
+						Log.e("asd", "making self data obj failed");
+					}
+					frag = ProfilePageFragment.newInstance(selfData);
+					break;
+
+				case SETTINGS_FRAG_TAG :
+					frag = SettingsFragment.newInstance("asd", "asd");
+					break;
+
+				default :
+					Log.e("asd", "no such tag");
+					frag = UrlFragment.newInstance("asd", "asd");
+					break;
+			}
+			fragmentCache.put(fragTag, frag);
+			return frag;
+		}
+	}
+
+	private void showDefaultPage() {
+		onClickButtonSearch(null);
+	}
+
+
+	private boolean isUpToDate() {
+		// criteria for up to date is self update string (version 2);
+		// this is because the self page needs this
+		String selfDataString = getSharedPreferences("InstaJetPrefs", MODE_PRIVATE).getString("selfDataString", null);
+		return selfDataString != null;
+	}
+
+	private void showRestartAppDialog() {
+		AlertDialog.Builder ab = new AlertDialog.Builder(this);
+		ab.setTitle("App Updated");
+		ab.setMessage("A major update has been applied and some internal data has been cleared. Please log in again.");
+		ab.setCancelable(false);
+		ab.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				//actuallyLogout and exit
+				actuallyLogout();
+			}
+		});
+
+		ab.show();
+	}
+
+	private void actuallyLogout() {
+		getSharedPreferences("InstaJetPrefs", Context.MODE_PRIVATE).edit().clear().commit();
+		finish();
+	}
+
 }
