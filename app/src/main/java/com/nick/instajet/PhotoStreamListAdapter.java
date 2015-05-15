@@ -16,12 +16,21 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Created by Nick on 15/5/2015.
  */
 public class PhotoStreamListAdapter extends BaseAdapter implements ListAdapter {
+
+    public static final String POSTED_DATE_TEMPLATE = "d MMM yyyy";
+    public static final String POSTED_TIME_TEMPLATE = "h : mm a";
 
     private final Activity caller;
     private final JSONArray mediaList;
@@ -68,22 +77,44 @@ public class PhotoStreamListAdapter extends BaseAdapter implements ListAdapter {
             }
         });
 
+        // username
         TextView textViewUsername = (TextView) rowView.findViewById(R.id.TextViewUsername);
         JSONObject user = mediaData.optJSONObject("user");
         String username = user.optString("username", "(Username not available)");
         textViewUsername.setText(username);
 
+        // data type
         int dataType = getDataType(mediaData);
         TextView textViewMediaType = (TextView) rowView.findViewById(R.id.TextViewMediaType);
         textViewMediaType.setText(getDataTypeText(dataType));
 
+        // image itself
         ImageView imageViewPhotoStreamImage = (ImageView) rowView.findViewById(R.id.ImageViewPhotoStreamImage);
         ProgressBar progressBar = (ProgressBar) rowView.findViewById(R.id.ProgressBarImageLoadProgress);
-
         JSONObject images = mediaData.optJSONObject("images");
         JSONObject stdRes = images.optJSONObject("standard_resolution");
         String imageUrl = stdRes.optString("url");
         loadMediaImage(imageViewPhotoStreamImage, progressBar, imageUrl);
+
+        //date and time
+        TextView textViewPostedDate = (TextView) rowView.findViewById(R.id.TextViewPostedDate);
+        TextView textViewPostedTime = (TextView) rowView.findViewById(R.id.TextViewPostedTime);
+        String postedTimeString = mediaData.optString("created_time", null); // in seconds
+        Calendar c = Calendar.getInstance(Locale.getDefault());
+        Long postedTime = Long.parseLong(postedTimeString) * 1000; // convert to mil
+        c.setTimeInMillis(postedTime);
+        c.setTimeZone(TimeZone.getDefault());
+        Date d = new Date();
+        d.setTime(postedTime);
+        String dateString = new SimpleDateFormat(POSTED_DATE_TEMPLATE).format(c.getTime());
+        textViewPostedDate.setText(dateString);
+        String timeString = new SimpleDateFormat(POSTED_TIME_TEMPLATE).format(c.getTime());
+        textViewPostedTime.setText(timeString);
+        Log.i("asd", c.getTime().getTime() + "");
+        Log.i("asd", postedTimeString);
+        Log.i("asd", postedTime +"");
+        Log.i("asd", dateString);
+        Log.i("asd", timeString);
     }
 
     public static int getDataType(JSONObject o) {

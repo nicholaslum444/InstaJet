@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -19,8 +20,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.List;
-
 
 /**
  * A simple {@link Fragment} subclass.
@@ -30,7 +29,7 @@ import java.util.List;
  * Use the {@link PhotoStreamFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class PhotoStreamFragment extends Fragment implements InstagramApiHandlerTaskListener {
+public class PhotoStreamFragment extends Fragment implements InstagramApiHandlerTaskListener, AbsListView.OnScrollListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_USER_ID = "userId";
@@ -45,6 +44,9 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
     private JSONArray mediaList;
     private PhotoStreamListAdapter mediaListAdapter;
 
+    private volatile boolean loading;
+    LinearLayout layoutLoadMore;
+
     private OnFragmentInteractionListener mListener;
 
     private static final String RECENT_FIRST_API_REQUEST_TEMPLATE = "https://api.instagram.com/v1/users/%1$s/media/recent?access_token=%2$s";
@@ -53,6 +55,8 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
     public static final String STREAM_TYPE_USER = "user";
     public static final String STREAM_TYPE_FEED = "feed";
     public static final String STREAM_TYPE_POPULAR = "popular";
+
+    private static final int THRESHOLD_LOAD_MORE = 3;
 
     /**
      * Use this factory method to create a new instance of
@@ -92,7 +96,6 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_photo_stream, container, false);
-
         return v;
     }
 
@@ -100,35 +103,6 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
     public void onViewCreated(View v, Bundle b) {
         super.onViewCreated(v, b);
         setupStream();
-    }
-
-    private void setupStream() {
-        ListView listViewPhotoStream = (ListView) getView().findViewById(R.id.ListViewPhotoStream);
-        listViewPhotoStream.setFooterDividersEnabled(true);
-        Button b = new Button(getActivity());
-        b.setText("Load more");
-        b.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                requestNextPhotoSet(nextUrl);
-            }
-        });
-        b.setLayoutParams(new ListView.LayoutParams(ListView.LayoutParams.MATCH_PARENT, ListView.LayoutParams.WRAP_CONTENT));
-        listViewPhotoStream.addFooterView(b);
-
-        String firstApiUrl = "";
-
-        switch (streamType) {
-            case STREAM_TYPE_USER :
-                firstApiUrl = String.format(RECENT_FIRST_API_REQUEST_TEMPLATE, userId, accessToken);
-                break;
-
-            default :
-                Log.e("asd", "invalid stream type");
-
-        }
-
-        requestNextPhotoSet(firstApiUrl);
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -155,13 +129,50 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
         mListener = null;
     }
 
+    private void setupStream() {
+//        // set up show more button
+//        buttonLoadMore = new Button(getActivity());
+//        buttonLoadMore.setText("Load more");
+//        buttonLoadMore.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                requestNextPhotoSet(nextUrl);
+//            }
+//        });
+//        buttonLoadMore.setLayoutParams(new ListView.LayoutParams(ListView.LayoutParams.MATCH_PARENT, ListView.LayoutParams.WRAP_CONTENT));
+//
+//        // setup load more progress bar
+//        progressLoadMore = new ProgressBar(getActivity(), null, android.R.attr.progressBarStyleSmall);
+
+        // setup the footer
+        layoutLoadMore = (LinearLayout) LayoutInflater.from(getActivity()).inflate(R.layout.listfooter_photo_stream, null);
+        setLoadMoreFooterVisibility(View.VISIBLE);
+
+        ListView listViewPhotoStream = (ListView) getView().findViewById(R.id.ListViewPhotoStream);
+        listViewPhotoStream.setOnScrollListener(this);
+
+        String firstApiUrl = "";
+
+        switch (streamType) {
+            case STREAM_TYPE_USER :
+                firstApiUrl = String.format(RECENT_FIRST_API_REQUEST_TEMPLATE, userId, accessToken);
+                break;
+
+            default :
+                Log.e("asd", "invalid stream type");
+
+        }
+
+        requestNextPhotoSet(firstApiUrl);
+    }
+
     private void requestNextPhotoSet(String nextUrl) {
         if (nextUrl == null) {
             return;
         }
 
         setProgressBarVisibility(View.VISIBLE);
-        setLoadMoreButtonVisibility(View.GONE);
+        loading = true;
 
         Log.e("asd", nextUrl);
 
@@ -172,6 +183,7 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
         Log.e("asd", response.toString());
 
         setProgressBarVisibility(View.GONE);
+        loading = false;
 
         try {
             JSONObject meta = response.getJSONObject("meta");
@@ -201,12 +213,11 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
             String nextUrlTemp = pagination.optString("next_url", null);
             if (nextUrlTemp == null) {
                 Log.e("asd", "no more url");
-                setLoadMoreButtonVisibility(View.GONE);
+                setLoadMoreFooterVisibility(View.GONE);
                 nextUrl = null;
             } else {
                 Log.e("asd", "have more url");
                 nextUrl = pagination.getString("next_url");
-                setLoadMoreButtonVisibility(View.VISIBLE);
             }
 
             // update the main medialist
@@ -255,9 +266,16 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
         Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
     }
 
-    private void setLoadMoreButtonVisibility(int visibility) {
-//        Button buttonPhotoStreamLoadMore = (Button) getView().findViewById(R.id.ButtonPhotoStreamLoadMore);
-//        buttonPhotoStreamLoadMore.setVisibility(visibility);
+    private void setLoadMoreFooterVisibility(int visibility) {
+        if (getView() == null) {
+            return;
+        }
+        ListView listViewPhotoStream = (ListView) getView().findViewById(R.id.ListViewPhotoStream);
+        if (visibility == View.GONE) {
+            listViewPhotoStream.removeFooterView(layoutLoadMore);
+        } else if (visibility == View.VISIBLE) {
+            listViewPhotoStream.addFooterView(layoutLoadMore);
+        }
     }
 
     private void setProgressBarVisibility(int visibility) {
@@ -274,6 +292,34 @@ public class PhotoStreamFragment extends Fragment implements InstagramApiHandler
         }
         LinearLayout layoutRestrictedWarning = (LinearLayout) getView().findViewById(R.id.LayoutRestrictedWarning);
         layoutRestrictedWarning.setVisibility(visibility);
+    }
+
+    @Override
+    public void onScrollStateChanged(AbsListView view, int scrollState) {
+        if (nextUrl == null) {
+            Log.e("asd", "end of stream");
+            return;
+        }
+        if (getView() == null) {
+            return;
+        }
+        if (loading) {
+            Log.e("asd", "WAIT still loading");
+            return;
+        }
+        ListView listViewPhotoStream = (ListView) getView().findViewById(R.id.ListViewPhotoStream);
+        if (scrollState == SCROLL_STATE_IDLE) {
+            if (listViewPhotoStream.getLastVisiblePosition() >= listViewPhotoStream.getCount() - 1 - THRESHOLD_LOAD_MORE) {
+                //load more list items:
+                Log.e("asd", "loading next set");
+                requestNextPhotoSet(nextUrl);
+            }
+        }
+    }
+
+    @Override
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+        // empty
     }
 
     /**

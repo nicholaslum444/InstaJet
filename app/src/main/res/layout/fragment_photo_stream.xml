@@ -41,7 +41,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/ListViewPhotoStream"
-                android:isScrollContainer="false">
+                android:isScrollContainer="false"
+                android:footerDividersEnabled="true">
 
             </ListView>
 
@@ -51,12 +52,6 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:id="@+id/ProgressBarLoadProgress"/>
-
-            <!--<Button-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:id="@+id/ButtonPhotoStreamLoadMore"-->
-                <!--android:text="Load more"/>-->
 
         </LinearLayout>
 
