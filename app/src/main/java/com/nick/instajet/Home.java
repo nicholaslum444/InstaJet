@@ -1,10 +1,14 @@
 package com.nick.instajet;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -48,9 +52,14 @@ public class Home
 		boolean isLoggedIn = getSharedPreferences("InstaJetPrefs", MODE_PRIVATE).getBoolean("isLoggedIn", false);
 
 		if (isLoggedIn) {
-			// go to search page by default
-			// TODO let user choose where to go?
-			showDefaultPage();
+
+			if (isUpToDate()) {
+				// TODO let user choose where to go?
+				showDefaultPage();
+			} else {
+				// prompt relogin if not up to date.
+				showRestartAppDialog();
+			}
 
 		} else {
 			// show login page
@@ -128,9 +137,13 @@ public class Home
 
 
 	private void loadFragment(Fragment frag, String fragTag) {
-		FragmentTransaction ft = fm.beginTransaction();
-		ft.replace(R.id.LayoutFragment, frag, fragTag);
-		ft.commit();
+		// if currently loaded frag is same, dont do anything.
+		Fragment f = fm.findFragmentByTag(fragTag);
+		if (f == null || !f.isVisible()) {
+			FragmentTransaction ft = fm.beginTransaction();
+			ft.replace(R.id.LayoutFragment, frag, fragTag);
+			ft.commit();
+		}
 	}
 
 	private Fragment getFrag(String fragTag) {
@@ -175,6 +188,35 @@ public class Home
 
 	private void showDefaultPage() {
 		onClickButtonSearch(null);
+	}
+
+
+	private boolean isUpToDate() {
+		// criteria for up to date is self update string (version 2);
+		// this is because the self page needs this
+		String selfDataString = getSharedPreferences("InstaJetPrefs", MODE_PRIVATE).getString("selfDataString", null);
+		return selfDataString != null;
+	}
+
+	private void showRestartAppDialog() {
+		AlertDialog.Builder ab = new AlertDialog.Builder(this);
+		ab.setTitle("App Updated");
+		ab.setMessage("A major update has been applied and some internal data has been cleared. Please log in again.");
+		ab.setCancelable(false);
+		ab.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				//actuallyLogout and exit
+				actuallyLogout();
+			}
+		});
+
+		ab.show();
+	}
+
+	private void actuallyLogout() {
+		getSharedPreferences("InstaJetPrefs", Context.MODE_PRIVATE).edit().clear().commit();
+		finish();
 	}
 
 }

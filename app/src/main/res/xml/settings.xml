@@ -5,7 +5,7 @@
     <PreferenceCategory
         android:title="Account">
 
-        <com.nick.instajet.LogoutDialogPreference
+        <Preference
             android:key="logoutPreference"
             android:title="Logout and Exit"
             android:summary="Logout from your Instagram account and exit" />

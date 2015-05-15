@@ -14,5 +14,4 @@ public class LogoutDialogPreference extends DialogPreference {
     public LogoutDialogPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
-
 }
