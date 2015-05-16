@@ -123,6 +123,11 @@ public class ProfilePageFragment extends Fragment implements View.OnClickListene
     public void onDetach() {
         super.onDetach();
         mListener = null;
+
+        ActionBar actionBar = getActivity().getActionBar();
+        if (actionBar != null) {
+            actionBar.setTitle(getString(R.string.app_name));
+        }
     }
 
     private void setupRelationshipDetails(View v, JSONObject profileData) {
